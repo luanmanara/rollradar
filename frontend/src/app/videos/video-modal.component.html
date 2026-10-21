@@ -1,0 +1,69 @@
+<div class="backdrop" (click)="closed.emit()"></div>
+
+<section class="dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <header class="dialog__head">
+    <div>
+      <h2 id="modal-title">{{ video().title }}</h2>
+      <p class="meta">{{ meta() }}</p>
+    </div>
+    <button type="button" class="close" (click)="closed.emit()" aria-label="Fechar player">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+    </button>
+  </header>
+
+  <div class="dialog__body">
+    <div class="player">
+      <app-video-player [videoId]="video().id" [startSeconds]="start(moment())" [endSeconds]="end(moment())" [replay]="replay()"
+        (ended)="onEnded()" />
+
+      <div class="controls">
+        <div class="steps">
+          <button type="button" class="step" (click)="previous()" [disabled]="!hasPrevious()" title="Momento anterior (J)">‹ Anterior</button>
+          <span class="position" aria-live="polite">{{ index() + 1 }} de {{ clips().length }}</span>
+          <button type="button" class="step" (click)="next()" [disabled]="!hasNext()" title="Próximo momento (K)">Próximo ›</button>
+        </div>
+        <div class="tools">
+          <button type="button" class="tool" (click)="again()" title="Ver o lance de novo (R)">↺ Repetir</button>
+          <label class="tool tool--select">
+            Começar
+            <select [value]="leadIn()" (change)="setLeadIn($any($event.target).value)" aria-label="Segundos antes da menção">
+              @for (s of leadInOptions; track s) {
+                <option [value]="s" [selected]="s === leadIn()">{{ s }} s antes</option>
+              }
+            </select>
+          </label>
+          <label class="tool tool--check" title="Cada momento para {{ clipAfter }} s depois da menção, ou quando você vota, e o próximo começa">
+            <input type="checkbox" [checked]="inSequence()" (change)="setInSequence($any($event.target).checked)" />
+            Tocar em sequência
+          </label>
+        </div>
+      </div>
+
+      <app-moment-vote [momentId]="moment().id" (voted)="onVoted()" />
+    </div>
+
+    <aside class="side">
+      <h3>{{ mixed() ? 'Fila de momentos' : 'Momentos neste vídeo' }}</h3>
+      <ul class="moments">
+        @for (c of clips(); track c.moment.id) {
+          <li>
+            <button type="button" class="moment" [class.moment--active]="c.moment.id === moment().id" (click)="go(c)">
+              <span class="time">{{ c.moment.startSeconds | formatTime }}</span>
+              @if (c.moment.status === 'bom') { <span class="ok" title="Aprovado pela curadoria">✓</span> }
+              <span class="text">
+                @if (mixed()) { <span class="fight">{{ c.video.title }}</span> }
+                <span class="snippet">
+                  @for (part of c.moment.snippet | highlight: c.moment.technique; track $index) {
+                    @if (part.match) { <mark>{{ part.text }}</mark> } @else { {{ part.text }} }
+                  }
+                </span>
+              </span>
+            </button>
+          </li>
+        }
+      </ul>
+      <p class="keys">Atalhos: <kbd>J</kbd> anterior, <kbd>K</kbd> próximo, <kbd>R</kbd> repetir.</p>
+      <a class="external" [href]="youtubeUrl()" target="_blank" rel="noopener">Abrir no YouTube ↗</a>
+    </aside>
+  </div>
+</section>

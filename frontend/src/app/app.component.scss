@@ -1,0 +1,70 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.topbar {
+  position: relative;
+  padding: 28px 0 88px;
+  background: linear-gradient(135deg, var(--navy) 0%, #183f8f 60%, var(--blue) 100%);
+  color: #fff;
+
+  /* Light red bar along the bottom, like the bar of a black belt. */
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 4px;
+    background: var(--red);
+    opacity: 0.85;
+  }
+}
+
+.topbar__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 24px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  text-decoration: none;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* The app logo: belt knot with the radar signal, on a white rounded tile. */
+.brand__logo {
+  display: block;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.tagline {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.95rem;
+}
+
+.main {
+  flex: 1;
+  margin-top: -64px;
+  position: relative;
+}
+
+.footer {
+  padding: 32px 16px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  text-align: center;
+}

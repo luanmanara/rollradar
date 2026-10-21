@@ -1,0 +1,38 @@
+@if (category(); as name) {
+  <div class="head">
+    <button type="button" class="back" (click)="category.set(null)">‹ Categorias</button>
+    <h3>{{ name }}</h3>
+  </div>
+
+  <div class="chips">
+    @for (t of shown(); track t.english) {
+      <button type="button" class="chip" [class.chip--current]="isCurrent(t)" (click)="picked.emit(t)">
+        <span class="chip__name">{{ t.portuguese || t.english }}</span>
+        @if (t.portuguese && t.english.toLowerCase() !== t.portuguese.toLowerCase()) {
+          <span class="chip__en">{{ t.english }}</span>
+        }
+        <span class="chip__count" [attr.aria-label]="t.videoCount + ' lutas'">{{ t.videoCount }}</span>
+      </button>
+    }
+  </div>
+
+  @if (missing() > 0) {
+    <p class="missing">
+      @if (shown().length > 0) { + }
+      {{ missing() }} {{ missing() === 1 ? 'técnica' : 'técnicas' }} de {{ name }} ainda sem vídeos.
+    </p>
+  }
+} @else {
+  <ul class="categories" aria-label="Categorias de técnicas">
+    @for (c of categories(); track c.name) {
+      <li>
+        <button type="button" class="category" [class.category--empty]="c.count === 0" (click)="category.set(c.name)">
+          @if (c.image) { <img class="category__image" [src]="c.image" alt="" loading="lazy"> }
+          <span class="category__name">{{ c.name }}</span>
+          <span class="category__count">{{ c.count }} {{ c.count === 1 ? 'técnica' : 'técnicas' }}</span>
+          @if (c.preview.length > 0) { <span class="category__preview">{{ c.preview.join(', ') }}</span> }
+        </button>
+      </li>
+    }
+  </ul>
+}

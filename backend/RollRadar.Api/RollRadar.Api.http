@@ -1,0 +1,30 @@
+@RollRadar.Api_HostAddress = http://localhost:5214
+
+GET {{RollRadar.Api_HostAddress}}/api/videos?technique=omoplata
+Accept: application/json
+
+###
+
+GET {{RollRadar.Api_HostAddress}}/api/videos?technique=omoplata&athlete=meregali
+Accept: application/json
+
+###
+
+GET {{RollRadar.Api_HostAddress}}/api/videos?technique=chave%20de%20bra%C3%A7o
+Accept: application/json
+
+###
+
+GET {{RollRadar.Api_HostAddress}}/api/videos/techniques
+Accept: application/json
+
+###
+
+# Data API: create a token with the collector's "token criar" and paste it here.
+@token = rr_cole-o-token-aqui
+
+GET {{RollRadar.Api_HostAddress}}/api/v1/dados/moments?technique=armbar&status=bom&limit=50
+Authorization: Bearer {{token}}
+Accept: application/json
+
+###

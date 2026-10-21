@@ -1,0 +1,81 @@
+<section class="card panel">
+  <header class="panel__head">
+    <div>
+      <h2>Curadoria</h2>
+      <p class="hint">Marque se cada momento mostra mesmo a técnica. Os mais votados pelos visitantes aparecem primeiro.</p>
+    </div>
+    @if (signedIn()) {
+      <button type="button" class="link" (click)="signOut()">Sair</button>
+    }
+  </header>
+
+  @if (!signedIn()) {
+    <form class="row" (submit)="$event.preventDefault(); signIn(keyInput.value)">
+      <label class="field">
+        <span class="sr-only">Chave de curadoria</span>
+        <input #keyInput type="password" placeholder="Chave de curadoria" autocomplete="current-password" />
+      </label>
+      <button type="submit" class="primary">Entrar</button>
+    </form>
+    @if (keyError()) { <p class="notice notice--error" role="alert">{{ keyError() }}</p> }
+  } @else {
+    <form class="row" (submit)="$event.preventDefault(); search(techniqueInput.value)">
+      <label class="field">
+        <span class="sr-only">Técnica</span>
+        <input #techniqueInput type="search" placeholder="Técnica (vazio para todas)" [value]="technique()" />
+      </label>
+      <button type="submit" class="primary">Buscar</button>
+    </form>
+    <div class="tabs" role="tablist" aria-label="Status">
+      @for (f of filters; track f.value) {
+        <button type="button" role="tab" class="tab" [class.tab--on]="status() === f.value" [attr.aria-selected]="status() === f.value"
+          (click)="filter(f.value)">{{ f.label }}</button>
+      }
+    </div>
+  }
+</section>
+
+@if (error()) {
+  <p class="notice notice--error" role="alert">{{ error() }}</p>
+}
+
+@if (signedIn()) {
+  @if (loading()) {
+    <p class="notice" aria-busy="true">Carregando momentos…</p>
+  } @else if (items(); as list) {
+    <ul class="items">
+      @for (item of list; track item.moment.id) {
+        <li class="card item" [class.item--good]="item.status === 'bom'" [class.item--bad]="item.status === 'ruim'">
+          <button type="button" class="time" (click)="play(item)" [attr.aria-label]="'Assistir em ' + (item.moment.startSeconds | formatTime)">
+            ▶ {{ item.moment.startSeconds | formatTime }}
+          </button>
+          <div class="item__body">
+            <h3>{{ item.video.title }}</h3>
+            <p class="meta">{{ meta(item.video) }} · {{ item.moment.technique }}</p>
+            <p class="snippet">
+              @for (part of item.moment.snippet | highlight: item.moment.technique; track $index) {
+                @if (part.match) { <mark>{{ part.text }}</mark> } @else { {{ part.text }} }
+              }
+            </p>
+            <p class="votes">
+              <span title="Útil">👍 {{ item.votes.useful }}</span>
+              <span title="Não útil">👎 {{ item.votes.notUseful }}</span>
+            </p>
+          </div>
+          <div class="item__actions">
+            <button type="button" class="mark mark--good" [class.mark--on]="item.status === 'bom'" [attr.aria-pressed]="item.status === 'bom'"
+              (click)="mark(item, 'bom')">Bom</button>
+            <button type="button" class="mark mark--bad" [class.mark--on]="item.status === 'ruim'" [attr.aria-pressed]="item.status === 'ruim'"
+              (click)="mark(item, 'ruim')">Ruim</button>
+          </div>
+        </li>
+      } @empty {
+        <li class="card empty">Nenhum momento com esse filtro.</li>
+      }
+    </ul>
+  }
+}
+
+@if (selected(); as sel) {
+  <app-video-modal [video]="sel.video" [moment]="sel.moment" [meta]="meta(sel.video)" (closed)="close()" />
+}

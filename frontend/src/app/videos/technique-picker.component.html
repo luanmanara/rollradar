@@ -1,0 +1,75 @@
+<form class="picker" role="search" (submit)="$event.preventDefault(); submit()">
+  <label class="sr-only" for="technique-input">Técnica</label>
+  <div class="field">
+    <svg class="field__icon" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+    </svg>
+    <input
+      id="technique-input"
+      type="text"
+      autocomplete="off"
+      spellcheck="false"
+      role="combobox"
+      aria-autocomplete="list"
+      [attr.aria-expanded]="showList()"
+      [attr.aria-controls]="listId"
+      [attr.aria-activedescendant]="active() >= 0 ? optionId(active()) : null"
+      placeholder="Digite uma técnica ou um atleta: montada, armbar, Gordon Ryan…"
+      [value]="query()"
+      (input)="onInput($any($event.target).value)"
+      (keydown)="onKeydown($event)"
+      (focus)="open.set(true)"
+      (blur)="open.set(false)" />
+
+    @if (showList()) {
+      <ul class="list" role="listbox" [id]="listId">
+        @if (!query().trim()) {
+          <li class="list__heading" role="presentation">Mais encontradas nas lutas</li>
+        } @else if (fuzzy()) {
+          <li class="list__heading" role="presentation">Você quis dizer</li>
+        } @else if (athleteMatches().length > 0 && suggestions().length > 0) {
+          <li class="list__heading" role="presentation">Técnicas</li>
+        }
+        @for (t of suggestions(); track t.english; let i = $index) {
+          <li
+            role="option"
+            class="option"
+            [id]="optionId(i)"
+            [class.option--active]="i === active()"
+            [class.option--empty]="t.videoCount === 0"
+            [attr.aria-selected]="i === active()"
+            (mousedown)="$event.preventDefault(); choose(t)"
+            (mouseenter)="active.set(i)">
+            <span class="option__names">
+              <span class="option__pt">{{ t.portuguese || t.english }}</span>
+              @if (t.portuguese && t.english.toLowerCase() !== t.portuguese.toLowerCase()) {
+                <span class="option__en">{{ t.english }}</span>
+              }
+            </span>
+            @if (t.category) { <span class="pill">{{ t.category }}</span> }
+            <span class="option__count">
+              @if (t.videoCount > 0) { {{ t.videoCount }} {{ t.videoCount === 1 ? 'luta' : 'lutas' }} } @else { sem vídeos }
+            </span>
+          </li>
+        }
+        @if (athleteMatches().length > 0) {
+          <li class="list__heading" role="presentation">Atletas</li>
+          @for (a of athleteMatches(); track a.name; let j = $index) {
+            <li
+              role="option"
+              class="option"
+              [id]="optionId(suggestions().length + j)"
+              [class.option--active]="suggestions().length + j === active()"
+              [attr.aria-selected]="suggestions().length + j === active()"
+              (mousedown)="$event.preventDefault(); chooseAthlete(a)"
+              (mouseenter)="active.set(suggestions().length + j)">
+              <span class="option__names"><span class="option__pt">{{ a.name }}</span></span>
+              <span class="option__count">{{ a.fights }} {{ a.fights === 1 ? 'luta' : 'lutas' }}</span>
+            </li>
+          }
+        }
+      </ul>
+    }
+  </div>
+  <button type="submit" class="submit" [disabled]="loading()">Buscar</button>
+</form>

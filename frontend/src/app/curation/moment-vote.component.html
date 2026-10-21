@@ -1,0 +1,14 @@
+<div class="vote" role="group" aria-labelledby="vote-question">
+  <span id="vote-question" class="vote__question">Este momento mostra a técnica?</span>
+  <div class="vote__buttons">
+    <button type="button" class="vote__btn" [class.vote__btn--on]="useful() === true" [attr.aria-pressed]="useful() === true"
+      [disabled]="busy()" (click)="answer(true)">
+      <span aria-hidden="true">👍</span> Sim
+    </button>
+    <button type="button" class="vote__btn vote__btn--no" [class.vote__btn--on]="useful() === false" [attr.aria-pressed]="useful() === false"
+      [disabled]="busy()" (click)="answer(false)">
+      <span aria-hidden="true">👎</span> Não
+    </button>
+  </div>
+  <span class="vote__message" role="status">{{ message() }}</span>
+</div>

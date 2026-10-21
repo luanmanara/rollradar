@@ -1,0 +1,216 @@
+<section class="card search">
+  <app-technique-picker
+    [techniques]="techniques()"
+    [(query)]="query"
+    [athletes]="athletes()"
+    [loading]="loading()"
+    (searched)="searchFor($event)"
+    (athletePicked)="pickAthlete($event)" />
+  <p class="search__hint">Em português ou inglês, com ou sem acento. As legendas das lutas são em inglês.</p>
+
+  @if (techniques().length > 0) {
+    <app-technique-browser [techniques]="techniques()" [current]="searchedFor()" (picked)="pick($event)" />
+  }
+</section>
+
+@if (error()) {
+  <p class="notice notice--error" role="alert">{{ error() }}</p>
+}
+
+@if (isHome() && techniques().length > 0) {
+  <app-technique-highlights [techniques]="techniques()" (picked)="pick($event)" />
+}
+
+@if (loading()) {
+  <div class="results" aria-busy="true" aria-label="Buscando lutas">
+    @for (i of [1, 2, 3]; track i) {
+      <div class="card video video--skeleton"><div class="thumb"></div><div class="lines"><span></span><span></span><span></span></div></div>
+    }
+  </div>
+} @else if (shown(); as r) {
+  <section class="results" aria-live="polite" #results>
+    <header class="results__head">
+      <div class="results__title">
+        <h2>{{ heading() }}</h2>
+        @if (!combined()) {
+          @for (t of r.techniques; track t.english) {
+            @if (t.portuguese && t.english.toLowerCase() !== t.portuguese.toLowerCase()) {
+              <span class="results__en">{{ t.english }}</span>
+            }
+            @if (t.category) { <span class="pill">{{ t.category }}</span> }
+          }
+        }
+      </div>
+      @if (together().length > 0 || addable().length > 0) {
+        <app-technique-combo [together]="together()" [addable]="addable()"
+          (added)="addTechnique($event)" (removed)="removeTechnique($event)" />
+      }
+      @if (technique()?.aliases?.length) {
+        <p class="results__terms">Também chamada de {{ technique()!.aliases!.join(', ') }}.</p>
+      }
+      @if (athletePage()) {
+        <p class="results__terms">Lutas com {{ athletePage() }} no título, com todas as técnicas encontradas nas legendas.</p>
+        @if (athleteTechniques().length > 0) {
+          <p class="suggest">
+            Ver só
+            @for (a of athleteTechniques(); track a.technique.english) {
+              <button type="button" class="suggest__chip" (click)="openAthleteTechnique(a.technique)">
+                {{ a.technique.portuguese || a.technique.english }} · {{ a.moments }}
+              </button>
+            }
+          </p>
+        }
+      } @else if (isHome()) {
+        <p class="results__terms">As lutas mais novas com técnicas encontradas nas legendas. Busque uma técnica para ver todas as lutas dela.</p>
+      } @else if (r.techniques.length > 0) {
+        <p class="results__terms">
+          Buscado nas legendas em inglês por
+          @for (term of r.searchTerms; track term; let last = $last) {
+            <q>{{ term }}</q>@if (!last) {, }
+          }
+          e pelos outros nomes da técnica.
+        </p>
+      } @else {
+        <div class="notice">
+          <q>{{ r.query }}</q> não está no catálogo de técnicas, então o termo foi buscado como foi digitado.
+          @if (didYouMean().length > 0) {
+            <p class="suggest">
+              Você quis dizer
+              @for (t of didYouMean(); track t.english) {
+                <button type="button" class="suggest__chip" (click)="pick(t)">{{ t.portuguese || t.english }}</button>
+              }
+            </p>
+          } @else {
+            Escolha uma das sugestões para buscar também pelos outros nomes da técnica.
+          }
+        </div>
+      }
+    </header>
+
+    @if (r.videos.length > 0) {
+      <div class="toolbar">
+        <div class="views" role="group" aria-label="Mostrar resultados por">
+          <button type="button" class="view" [class.view--on]="view() === 'momentos'" [attr.aria-pressed]="view() === 'momentos'"
+            (click)="setView('momentos')">Momentos</button>
+          <button type="button" class="view" [class.view--on]="view() === 'lutas'" [attr.aria-pressed]="view() === 'lutas'"
+            (click)="setView('lutas')">Lutas</button>
+        </div>
+        <p class="stats">
+          <strong>{{ videos().length }}</strong> {{ videos().length === 1 ? 'luta' : 'lutas' }} ·
+          <strong>{{ momentCount() }}</strong> {{ momentCount() === 1 ? 'momento' : 'momentos' }}@if (approvedCount() > 0) { · <strong>{{ approvedCount() }}</strong> {{ approvedCount() === 1 ? 'aprovado' : 'aprovados' }}}
+        </p>
+      </div>
+
+      <div class="filters">
+        @if (r.videos.length > 1 && !athletePage()) {
+          <label class="filter filter--athlete">
+            <span class="sr-only">Filtrar por atleta</span>
+            <input type="search" placeholder="Filtrar por atleta" list="athlete-options" [value]="athlete()"
+              (input)="setAthlete($any($event.target).value)" />
+            <datalist id="athlete-options">
+              @for (a of resultAthletes(); track a) { <option [value]="a"></option> }
+            </datalist>
+          </label>
+        }
+        @if (channels().length > 1) {
+          <label class="filter">
+            <span class="sr-only">Canal</span>
+            <select [value]="channel()" (change)="setChannel($any($event.target).value)">
+              <option value="" [selected]="!channel()">Todos os canais</option>
+              @for (c of channels(); track c) { <option [value]="c" [selected]="c === channel()">{{ c }}</option> }
+            </select>
+          </label>
+        }
+        <label class="filter">
+          <span class="sr-only">Período</span>
+          <select [value]="period()" (change)="setPeriod($any($event.target).value)">
+            @for (p of periods; track p.value) { <option [value]="p.value" [selected]="p.value === period()">{{ p.label }}</option> }
+          </select>
+        </label>
+        <label class="filter">
+          <span class="sr-only">Ordenar</span>
+          <select [value]="sort()" (change)="setSort($any($event.target).value)">
+            @for (o of sorts; track o.value) { <option [value]="o.value" [selected]="o.value === sort()">{{ o.label }}</option> }
+          </select>
+        </label>
+        @if (hasApproved() || approvedOnly()) {
+          <label class="check">
+            <input type="checkbox" [checked]="approvedOnly()" (change)="setApprovedOnly($any($event.target).checked)" />
+            Só aprovados
+          </label>
+        }
+      </div>
+    }
+
+    @if (videos().length > 0 && view() === 'momentos') {
+      <app-moment-grid [clips]="clips()" [showTechnique]="isHome() || combined() || !!athletePage()" (played)="playClip($event)" />
+    } @else {
+      @for (video of videos(); track video.id) {
+        <article class="card video">
+          <button type="button" class="thumb" (click)="play(video, video.moments[0])" [attr.aria-label]="'Assistir ' + video.title">
+            <img [src]="video.thumbnailUrl" alt="" loading="lazy" />
+            <span class="thumb__play" aria-hidden="true"></span>
+            <span class="thumb__badge">{{ video.moments.length }} {{ video.moments.length === 1 ? 'momento' : 'momentos' }}</span>
+          </button>
+          <div class="video__body">
+            <h3>{{ video.title }}</h3>
+            <p class="meta">{{ meta(video) }}</p>
+            <app-fight-timeline [video]="video" (played)="play(video, $event)" />
+            <ul class="moments">
+              @for (moment of visibleMoments(video); track moment.id) {
+                <li>
+                  <button type="button" class="moment" (click)="play(video, moment)">
+                    <span class="time">▶ {{ moment.startSeconds | formatTime }}</span>
+                    <span class="snippet">
+                      @if (moment.status === 'bom') { <span class="pill pill--ok">✓ Aprovado</span> }
+                      @if (moment.votesUseful) { <span class="vote-count">👍 {{ moment.votesUseful }}</span> }
+                      @if (isHome() || combined() || athletePage()) { <span class="pill">{{ moment.technique }}</span> }
+                      @for (part of moment.snippet | highlight: moment.technique; track $index) {
+                        @if (part.match) { <mark>{{ part.text }}</mark> } @else { {{ part.text }} }
+                      }
+                    </span>
+                  </button>
+                </li>
+              }
+            </ul>
+            @if (video.moments.length > visibleMoments(video).length || expanded().has(video.id)) {
+              <button type="button" class="more" (click)="toggleMoments(video)">
+                @if (expanded().has(video.id)) { Mostrar menos } @else { Ver mais {{ video.moments.length - visibleMoments(video).length }} momentos }
+              </button>
+            }
+          </div>
+        </article>
+      } @empty {
+        <div class="card empty">
+          @if (filtered() && unfilteredCount() > 0) {
+            Nenhuma luta com esses filtros.
+            <button type="button" class="more" (click)="clearFilters()">Limpar filtros e ver {{ unfilteredCount() }} {{ unfilteredCount() === 1 ? 'luta' : 'lutas' }}</button>
+          } @else {
+            Nenhuma luta encontrada. Experimente uma das técnicas acima.
+          }
+        </div>
+      }
+    }
+
+    @if (related().length > 0) {
+      <footer class="related">
+        <h3>Mais de {{ technique()!.category }}</h3>
+        <div class="related__list">
+          @for (t of related(); track t.english) {
+            <button type="button" class="suggest__chip" (click)="pick(t)">{{ t.portuguese || t.english }}</button>
+          }
+        </div>
+      </footer>
+    }
+  </section>
+}
+
+@if (selected(); as sel) {
+  <app-video-modal
+    [video]="sel.video"
+    [moment]="sel.moment"
+    [queue]="clips()"
+    [meta]="meta(sel.video)"
+    (clipChange)="change($event)"
+    (closed)="close()" />
+}

@@ -1,0 +1,28 @@
+<ul class="grid">
+  @for (clip of clips(); track clip.moment.id) {
+    <li>
+      <button type="button" class="card clip" (click)="played.emit(clip)"
+        [attr.aria-label]="'Assistir ' + clip.video.title + ' em ' + (clip.moment.startSeconds | formatTime)">
+        <span class="thumb">
+          <img [src]="clip.video.thumbnailUrl" alt="" loading="lazy" />
+          <span class="thumb__play" aria-hidden="true"></span>
+          <span class="thumb__time">{{ clip.moment.startSeconds | formatTime }}</span>
+        </span>
+        <span class="body">
+          <span class="title">{{ clip.video.title }}</span>
+          <span class="meta">
+            {{ meta(clip) }}
+            @if (showTechnique()) { <span class="pill">{{ clip.moment.technique }}</span> }
+            @if (clip.moment.status === 'bom') { <span class="pill pill--ok">✓ Aprovado</span> }
+            @if (clip.moment.votesUseful) { <span class="vote-count" [attr.aria-label]="clip.moment.votesUseful + ' votos úteis'">👍 {{ clip.moment.votesUseful }}</span> }
+          </span>
+          <span class="snippet">
+            @for (part of excerpt(clip) | highlight: clip.moment.technique; track $index) {
+              @if (part.match) { <mark>{{ part.text }}</mark> } @else { {{ part.text }} }
+            }
+          </span>
+        </span>
+      </button>
+    </li>
+  }
+</ul>
