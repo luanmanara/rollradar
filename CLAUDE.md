@@ -90,6 +90,15 @@ Config: `appsettings.json` → `Techniques:CatalogPath` and `Transcripts:OutputP
 project). The API runs with `InvariantGlobalization`, so accent folding uses an explicit table in
 `TextNormalizer` (string normalization does not strip accents there); the test project uses the same setting.
 
+## Change control
+
+Every change is a card in `MUDANCAS.md` (repo root) with a sequential code `RR-001`, `RR-002`… (one sequence for
+all types). Types: Requisição (`feature/`), Problema (`fix/`), Incidente (`hotfix/`, the published site is broken),
+Tarefa (`chore/`, technical work). Status: Aberta → Em andamento → Concluída (or Descartada); numbers are never reused.
+Before starting new work, propose the card (next free number) and the branch name; the user creates branches himself.
+Branch `feature/RR-013-diario-de-treino`, commit `RR-013: adiciona tabela de treinos`, PR `RR-013 · Diário de treino`.
+Big changes get child cards ("Parte de: RR-0xx"). Ideas stay in the ideas list until the user decides to do them.
+
 ## Decisions already made (don't reopen them)
 
 - Data comes only from the two scripts. Filmot exports were removed on purpose; don't bring them back.

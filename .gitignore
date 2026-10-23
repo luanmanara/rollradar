@@ -488,3 +488,6 @@ samples/cache/
 __pycache__/
 backend/RollRadar.Coletor/
 samples/
+
+# graphify: grafo de conhecimento gerado localmente
+graphify-out/
