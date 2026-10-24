@@ -1,0 +1,122 @@
+@if (!auth.loaded()) {
+  <p class="card loading" aria-busy="true">Carregando…</p>
+} @else if (!auth.user()) {
+  <app-login-invite />
+} @else {
+  @if (!editId()) { <app-focus-banner /> }
+
+  <section class="card form" [attr.aria-busy]="!ready()">
+    <header class="form__head">
+      <h1>{{ editId() ? 'Editar treino' : 'Registrar treino' }}</h1>
+      <a class="link" routerLink="/treinos">Histórico</a>
+    </header>
+
+    @if (ready()) {
+      @let s = session();
+      <div class="grid">
+        <div class="field">
+          <label class="label" for="training-date">Data</label>
+          <input class="text" id="training-date" type="date" [value]="s.date" (change)="patch({ date: $any($event.target).value })">
+        </div>
+        <div class="field">
+          <label class="label" for="training-duration">Duração (min)</label>
+          <div class="duration">
+            <input class="text" id="training-duration" type="number" inputmode="numeric" min="1" max="600"
+              [value]="s.durationMinutes" (input)="patch({ durationMinutes: +$any($event.target).value })">
+            @for (d of quickDurations; track d) {
+              <button type="button" class="seg" [attr.aria-pressed]="s.durationMinutes === d" (click)="patch({ durationMinutes: d })">{{ d }}</button>
+            }
+          </div>
+        </div>
+        <div class="field" role="group" aria-label="Modalidade">
+          <span class="label">Modalidade</span>
+          <div class="choices choices--fill">
+            @for (a of attires; track a.value) {
+              <button type="button" class="seg" [attr.aria-pressed]="s.attire === a.value" (click)="patch({ attire: a.value })">{{ a.label }}</button>
+            }
+          </div>
+        </div>
+        <div class="field" role="group" aria-label="Formato">
+          <span class="label">Formato</span>
+          <div class="choices choices--fill">
+            @for (f of formats; track f.value) {
+              <button type="button" class="seg" [attr.aria-pressed]="s.format === f.value" (click)="patch({ format: f.value })">{{ f.label }}</button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <label class="label" for="training-notes">Técnica do dia</label>
+        <textarea class="text" id="training-notes" rows="3" placeholder="O que foi ensinado ou treinado"
+          [value]="s.techniqueNotes ?? ''" (input)="patch({ techniqueNotes: $any($event.target).value || null })"></textarea>
+        <div class="tags">
+          <app-technique-picker [techniques]="tagTechniques()" inputId="training-tag" submitLabel="Marcar"
+            placeholder="Marcar técnica do catálogo (opcional)" (picked)="addTechnique($event)" />
+          @if (s.techniques.length > 0) {
+            <div class="chips">
+              @for (id of s.techniques; track id) {
+                <span class="chip chip--on">
+                  {{ techniqueName(id) }}
+                  <button type="button" class="chip__remove" (click)="removeTechnique(id)" [attr.aria-label]="'Desmarcar ' + techniqueName(id)">×</button>
+                </span>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="section">
+        <h2 class="section__title">Rolas</h2>
+        <div class="rolls">
+          @for (roll of s.rolls; track $index; let i = $index) {
+            <app-roll-card [roll]="roll" [index]="i" [chips]="chips()" [catalog]="positions().catalog"
+              [finishTechniques]="finishTechniques()" (rollChange)="updateRoll(i, $event)" (removed)="removeRoll(i)"
+              (positionAdded)="addChip($event)" />
+          }
+        </div>
+        <button type="button" class="seg add-roll" (click)="addRoll()">+ rola</button>
+      </div>
+
+      <div class="section">
+        <label class="label" for="training-focus">Ponto a corrigir</label>
+        <input class="text" id="training-focus" type="text" maxlength="300" placeholder="Uma coisa para trabalhar no próximo treino"
+          [value]="s.focusPoint ?? ''" (input)="patch({ focusPoint: $any($event.target).value || null })">
+      </div>
+
+      <details class="section physical">
+        <summary>Estado físico <small>(opcional)</small></summary>
+        @for (f of physical; track f.key) {
+          <div class="scale" role="group" [attr.aria-label]="f.label + ', de 1 a 5'">
+            <span class="label">{{ f.label }}</span>
+            <div class="choices">
+              @for (n of scales; track n) {
+                <button type="button" class="seg seg--round" [attr.aria-pressed]="s[f.key] === n" (click)="setScale(f.key, n)">{{ n }}</button>
+              }
+            </div>
+          </div>
+        }
+      </details>
+
+      @if (errorList().length > 0) {
+        <ul class="errors" role="alert">
+          @for (e of errorList(); track $index) { <li>{{ e }}</li> }
+        </ul>
+      }
+      @if (error()) { <p class="errors" role="alert">{{ error() }}</p> }
+
+      <div class="actions">
+        <button type="button" class="seg seg--primary save" [disabled]="saving()" (click)="save()">
+          {{ editId() ? 'Salvar alterações' : 'Salvar treino' }}
+        </button>
+        @if (saving() && !editId()) {
+          <p class="status" aria-live="polite">Salvo no celular, enviando…</p>
+        }
+      </div>
+    } @else if (error()) {
+      <p class="errors" role="alert">{{ error() }}</p>
+    } @else {
+      <p class="loading" aria-busy="true">Carregando…</p>
+    }
+  </section>
+}

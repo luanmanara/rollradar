@@ -34,7 +34,7 @@ public sealed class PostgresFixture : IAsyncLifetime
     {
         await using var db = CreateContext();
         await db.Database.ExecuteSqlRawAsync(
-            "TRUNCATE user_logins, users, athletes, api_tokens, moment_votes, technique_moments, transcript_segments, technique_aliases, techniques, videos, channels RESTART IDENTITY CASCADE");
+            "TRUNCATE focus_points, roll_finishes, roll_steps, rolls, game_nodes, session_techniques, partners, training_sessions, user_logins, users, athletes, api_tokens, moment_votes, technique_moments, transcript_segments, technique_aliases, techniques, videos, channels RESTART IDENTITY CASCADE");
     }
 }
 

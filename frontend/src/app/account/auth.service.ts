@@ -32,6 +32,17 @@ export class AuthService {
     return `/api/auth/login?returnUrl=${encodeURIComponent(returnUrl)}`;
   }
 
+  /** The JSON file with everything the user recorded (a plain link: the browser downloads it with the cookie). */
+  readonly exportUrl = '/api/conta/exportar';
+
+  /** Deletes the account and all its data for good; the site asks for confirmation first. */
+  deleteAccount(): Observable<void> {
+    return this.http.delete<void>('/api/conta').pipe(
+      map(() => undefined),
+      tap(() => this.user.set(null))
+    );
+  }
+
   /** Ends the session; a 401 means it had already ended, which is just as good. */
   logout(): Observable<void> {
     return this.http.post<void>('/api/auth/logout', null).pipe(

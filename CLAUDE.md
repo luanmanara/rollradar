@@ -84,7 +84,16 @@ The original pipeline, connected by files on disk:
      user-secrets; without them the API runs and `/api/auth/login` answers 503), then the `rr_session` cookie
      (HttpOnly, Lax, 30 days sliding, 401 instead of redirect) carries the `users.id` claim. Account endpoints
      (`/api/eu`, logout, later diary and map) use the `"User"` policy; the cookie never opens the data API.
-     Data Protection keys live in `data_protection_keys`, so cookies survive restarts. Setup: `docs/login-google.md`.
+     Data Protection keys live in `data_protection_keys`, so cookies survive restarts.
+   - Training diary (RR-013, `Training/`, `Data/DbTrainingStore`, `TrainingController`, policy `"User"`): tables
+     `training_sessions` (client-generated uuid, so POST is idempotent), `session_techniques`, `partners` (unique per
+     user by normalized name), `rolls` (timed, optional length), `roll_finishes` (any number per roll, `by_me`, optional
+     technique and position; none = nobody submitted), `roll_steps` (estive/fui bem/sofri), `game_nodes` (a Posições/Guardas technique + side, created on first
+     use; edges come with RR-014) and `focus_points`; every query filters by the cookie's user id and everything
+     cascades from `users` (`DELETE /api/conta`; `GET /api/conta/exportar` dumps it all). Choices travel as the stored
+     snake_case names (`SnakeCaseEnum`); `TrainingValidation` checks scales 1–5, finish/position categories.
+     Frontend `src/app/training/`: one-screen form with a localStorage draft and an outbox that retries
+     (`training-sync.service.ts`), history by week, detail; `/conta` in `src/app/account/`. "Rola" is masculine in UI text.
    - Frontend (`src/app/videos/`): standalone components, signals, zoneless, OnPush by default.
      `technique-picker` (autocomplete matching PT/EN/aliases client-side, `technique-match.ts`),
      `technique-browser` (category tabs), `video-search` (results, athlete filter client-side, search kept in

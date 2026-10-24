@@ -1,0 +1,39 @@
+@let r = roll();
+<article class="roll card" [attr.aria-label]="'Rola ' + (r.order + 1)">
+  <header class="roll__head">
+    <strong class="roll__name">{{ r.partnerName || 'Rola ' + (r.order + 1) }}</strong>
+    @if (r.partnerBelt) { <span class="belt-pill belt-pill--{{ r.partnerBelt }}">{{ beltLabel() }}</span> }
+    @if (r.durationMinutes) { <span class="pill-sm">{{ r.durationMinutes }} min</span> }
+    <span class="result result--{{ tone() }}">{{ summary() }}</span>
+  </header>
+
+  @if (r.steps.length > 0 || r.finishes.length > 0) {
+    <ol class="track" aria-label="Posições e finalizações">
+      @for (st of r.steps; track $index) {
+        <li class="track__item track__item--{{ st.outcome }}">
+          <span class="track__dot" aria-hidden="true"></span>
+          <span class="track__text">{{ techniqueName(st.techniqueId) }} <small>{{ side(st.side) }}</small></span>
+          <span class="track__state" [class.sr-only]="st.outcome === 'neutro'">{{ outcomes[st.outcome] }}</span>
+        </li>
+      }
+      @for (f of r.finishes; track $index) {
+        <li class="track__item track__item--{{ f.byMe ? 'win' : 'loss' }}">
+          <span class="track__icon" aria-hidden="true">{{ f.byMe ? '✓' : '✕' }}</span>
+          <span class="track__text">
+            {{ f.byMe ? 'Finalizei' : 'Fui finalizado' }}@if (f.techniqueId) { · <strong>{{ techniqueName(f.techniqueId) }}</strong> }
+            @if (f.position) { <small>de {{ techniqueName(f.position.techniqueId) }}</small> }
+          </span>
+        </li>
+      }
+    </ol>
+  }
+
+  @if (r.notes) {
+    <div class="notes" [class.notes--open]="notesOpen()">
+      <p>{{ r.notes }}</p>
+      <button type="button" class="notes__toggle" [attr.aria-expanded]="notesOpen()" (click)="notesOpen.set(!notesOpen())">
+        {{ notesOpen() ? 'ler menos' : 'ler mais' }}
+      </button>
+    </div>
+  }
+</article>

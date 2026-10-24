@@ -13,6 +13,7 @@ using RollRadar.Api.Curation;
 using RollRadar.Api.Data;
 using RollRadar.Api.Services;
 using RollRadar.Api.Techniques;
+using RollRadar.Api.Training;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -69,6 +70,7 @@ builder.Services.AddScoped<ICurationStore, EfCurationStore>();
 builder.Services.Configure<ApiAccessOptions>(builder.Configuration.GetSection(ApiAccessOptions.Section));
 // Site accounts (Google + rr_session cookie) only count where the "User" policy asks for them.
 builder.Services.AddScoped<IAccountStore, DbAccountStore>();
+builder.Services.AddScoped<ITrainingStore, DbTrainingStore>();
 builder.Services.AddAuthentication(ApiTokenAuthenticationHandler.Scheme)
     .AddScheme<AuthenticationSchemeOptions, ApiTokenAuthenticationHandler>(ApiTokenAuthenticationHandler.Scheme, null)
     .AddUserAccounts(builder.Configuration);

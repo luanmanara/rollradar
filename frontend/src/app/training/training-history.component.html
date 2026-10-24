@@ -1,0 +1,101 @@
+@if (!auth.loaded()) {
+  <p class="card loading" aria-busy="true">Carregando…</p>
+} @else if (!auth.user()) {
+  <app-login-invite />
+} @else {
+  <div class="history">
+    <header class="hero card">
+      <span class="eyebrow">Diário</span>
+      <div class="hero__row">
+        <h1>Diário de treino</h1>
+        <a class="cta" routerLink="/treino/novo">+ Registrar treino</a>
+      </div>
+      @if (total() > 0) { <p class="hero__count">{{ total() }} {{ total() === 1 ? 'treino' : 'treinos' }}{{ filtered() ? ' com estes filtros' : '' }}</p> }
+    </header>
+
+    <section class="filters card" aria-label="Filtros">
+      <label class="sr-only" for="history-q">Buscar nas anotações</label>
+      <input class="text" id="history-q" type="search" placeholder="Buscar nas anotações e nos rolas"
+        [value]="query()" (input)="query.set($any($event.target).value)">
+      <div class="filters__row">
+        <label class="sr-only" for="history-attire">Modalidade</label>
+        <select class="text" id="history-attire" [value]="attire()" (change)="attire.set($any($event.target).value)">
+          <option value="">Todas as modalidades</option>
+          @for (a of attires; track a.value) { <option [value]="a.value">{{ a.label }}</option> }
+        </select>
+        <label class="sr-only" for="history-format">Formato</label>
+        <select class="text" id="history-format" [value]="format()" (change)="format.set($any($event.target).value)">
+          <option value="">Todos os formatos</option>
+          @for (f of formats; track f.value) { <option [value]="f.value">{{ f.label }}</option> }
+        </select>
+        <label class="sr-only" for="history-partner">Parceiro</label>
+        <select class="text" id="history-partner" [value]="partnerId() ?? ''" (change)="partnerId.set(+$any($event.target).value || null)">
+          <option value="">Todos os parceiros</option>
+          @for (p of partners(); track p.id) { <option [value]="p.id">{{ p.name }}</option> }
+        </select>
+      </div>
+      @if (filtered()) { <button type="button" class="link" (click)="clear()">Limpar filtros</button> }
+    </section>
+
+    @if (sync.pending().length > 0) {
+      <section class="week" aria-label="Treinos ainda não enviados">
+        <h2>Salvos no celular</h2>
+        <ul class="list">
+          @for (s of sync.pending(); track s.id) {
+            <li class="item item--pending card">
+              <ng-container *ngTemplateOutlet="summary; context: { $implicit: s, pending: true }" />
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (error()) { <p class="errors" role="alert">{{ error() }}</p> }
+
+    @if (!loading() && sessions().length === 0 && !error()) {
+      <p class="empty card">
+        @if (filtered()) { Nenhum treino com estes filtros. } @else { Nenhum treino registrado ainda. <a routerLink="/treino/novo">Registre o primeiro.</a> }
+      </p>
+    }
+
+    @for (w of weeks(); track w.label) {
+      <section class="week" [attr.aria-label]="w.label">
+        <h2>{{ w.label }}</h2>
+        <ul class="list">
+          @for (s of w.sessions; track s.id) {
+            <li>
+              <a class="item card" [routerLink]="['/treinos', s.id]" [attr.aria-label]="day(s.date) + ', ' + line(s) + (rolls(s) ? ', ' + rolls(s) : '')">
+                <ng-container *ngTemplateOutlet="summary; context: { $implicit: s, pending: false }" />
+              </a>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (sessions().length < total()) {
+      <button type="button" class="more" [disabled]="loading()" (click)="more()">Carregar mais</button>
+    }
+    @if (loading()) { <p class="loading" aria-busy="true">Carregando…</p> }
+  </div>
+}
+
+<!-- One session as a card: day, pills, numbers. Shared by the sent and the pending ones. -->
+<ng-template #summary let-s let-pending="pending">
+  <div class="item__top">
+    <span class="item__day">{{ day(s.date) }}</span>
+    @if (pending) { <span class="sending">enviando…</span> } @else { <span class="item__go" aria-hidden="true">→</span> }
+  </div>
+  <ul class="pills">
+    @for (t of tags(s); track t) { <li>{{ t }}</li> }
+  </ul>
+  @if (s.techniqueNotes) { <p class="item__notes">{{ s.techniqueNotes }}</p> }
+  @if (s.rolls.length > 0) {
+    @let c = counts(s);
+    <dl class="mini">
+      <div class="stat"><dt>{{ c.rolls === 1 ? 'Rola' : 'Rolas' }}</dt><dd>{{ c.rolls }}</dd></div>
+      <div class="stat" [class.stat--win]="c.mine > 0"><dt>Finalizei</dt><dd>{{ c.mine }}</dd></div>
+      <div class="stat" [class.stat--loss]="c.theirs > 0"><dt>Fui finalizado</dt><dd>{{ c.theirs }}</dd></div>
+    </dl>
+  }
+</ng-template>

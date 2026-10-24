@@ -1,0 +1,110 @@
+<article class="roll" [attr.aria-label]="'Rola ' + (index() + 1)">
+  <header class="roll__head">
+    <h3>Rola {{ index() + 1 }}</h3>
+    <button type="button" class="roll__remove" (click)="removed.emit()" [attr.aria-label]="'Remover o rola ' + (index() + 1)">Remover</button>
+  </header>
+
+  <div class="row">
+    <label class="label" [for]="'partner-' + index()">Parceiro</label>
+    <input class="text" type="text" [id]="'partner-' + index()" autocomplete="off" placeholder="Nome (opcional)"
+      [attr.list]="'partners-' + index()" [value]="roll().partnerName ?? ''" (input)="onPartnerInput($any($event.target).value)">
+    <datalist [id]="'partners-' + index()">
+      @for (p of partners(); track p.id) { <option [value]="p.name"></option> }
+    </datalist>
+  </div>
+
+  <div class="row" role="group" [attr.aria-label]="'Faixa do parceiro no rola ' + (index() + 1)">
+    <span class="label">Faixa</span>
+    <div class="choices">
+      @for (b of belts; track b.value) {
+        <button type="button" class="belt belt--{{ b.value }}" [attr.aria-pressed]="roll().partnerBelt === b.value"
+          (click)="setBelt(b.value)">{{ b.label }}</button>
+      }
+    </div>
+  </div>
+
+  <div class="row">
+    <label class="label" [for]="'roll-minutes-' + index()">Duração do rola <small>(min, opcional)</small></label>
+    <div class="minutes">
+      <input class="text" type="number" inputmode="numeric" min="1" max="60" [id]="'roll-minutes-' + index()"
+        [value]="roll().durationMinutes ?? ''" (input)="setMinutes(+$any($event.target).value || null)">
+      @for (m of quickMinutes; track m) {
+        <button type="button" class="seg" [attr.aria-pressed]="roll().durationMinutes === m" (click)="setMinutes(roll().durationMinutes === m ? null : m)">{{ m }}</button>
+      }
+    </div>
+  </div>
+
+  <div class="row" role="group" [attr.aria-label]="'Posições do rola ' + (index() + 1)">
+    <span class="label">Posições</span>
+    <p class="legend">Toque para marcar: <strong>estive</strong> (passei por ela) → <strong>fui bem</strong> → <strong>sofri</strong> → desmarca.</p>
+    <div class="chips">
+      @for (chip of chips(); track chip.techniqueId + chip.side) {
+        @let outcome = outcomeOf(chip);
+        <button type="button" class="chip" [class.chip--on]="outcome !== null" [class.chip--bem]="outcome === 'bem'"
+          [class.chip--mal]="outcome === 'mal'" [attr.aria-pressed]="outcome !== null" (click)="tap(chip)">
+          {{ chip.label }}
+          @if (outcome) { <span class="chip__state">· {{ outcomes[outcome] }}</span> }
+        </button>
+      }
+      <button type="button" class="chip chip--add" [attr.aria-expanded]="adding()" (click)="adding.set(!adding())">+ posição</button>
+    </div>
+    @if (adding()) {
+      <div class="add">
+        <label class="sr-only" [for]="'position-' + index()">Posição</label>
+        <select class="text" [id]="'position-' + index()" [value]="newPosition()" (change)="newPosition.set($any($event.target).value)">
+          <option value="">Escolha a posição</option>
+          @for (g of catalogGroups(); track g.category) {
+            <optgroup [label]="g.category">
+              @for (p of g.positions; track p.techniqueId) { <option [value]="p.techniqueId">{{ p.portuguese || p.english }}</option> }
+            </optgroup>
+          }
+        </select>
+        <div class="choices" role="group" aria-label="Lado">
+          @for (s of sides; track s.value) {
+            <button type="button" class="seg" [attr.aria-pressed]="newSide() === s.value" (click)="newSide.set(s.value)">{{ s.label }}</button>
+          }
+        </div>
+        <button type="button" class="seg seg--primary" [disabled]="!newPosition()" (click)="addPosition()">Adicionar</button>
+      </div>
+    }
+  </div>
+
+  <div class="row" role="group" [attr.aria-label]="'Finalizações do rola ' + (index() + 1)">
+    <span class="label">Finalizações <small class="summary">· {{ summary() }}</small></span>
+    @for (f of roll().finishes; track $index; let j = $index) {
+      <div class="finish" [class.finish--mine]="f.byMe" [class.finish--theirs]="!f.byMe">
+        <div class="finish__head">
+          <span class="finish__who">{{ f.byMe ? 'Finalizei' : 'Fui finalizado' }}</span>
+          <button type="button" class="roll__remove" (click)="removeFinish(j)" [attr.aria-label]="'Remover a finalização ' + (j + 1)">Remover</button>
+        </div>
+        @if (f.techniqueId) {
+          <div class="chips">
+            <span class="chip chip--on">{{ techniqueName(f.techniqueId) }}</span>
+            <button type="button" class="link" (click)="updateFinish(j, { techniqueId: null })">trocar</button>
+          </div>
+        } @else {
+          <app-technique-picker [techniques]="finishTechniques()" [inputId]="'finish-' + index() + '-' + j"
+            placeholder="Qual finalização? (opcional)" submitLabel="Ok" (picked)="updateFinish(j, { techniqueId: $event.id ?? null })" />
+        }
+        @let options = finishOptions(f);
+        @if (options.length > 0) {
+          <label class="sr-only" [for]="'finish-position-' + index() + '-' + j">De qual posição</label>
+          <select class="text" [id]="'finish-position-' + index() + '-' + j" (change)="setFinishPosition(j, $any($event.target).value)">
+            <option value="" [selected]="!f.position">De qual posição? (opcional)</option>
+            @for (c of options; track key(c)) { <option [value]="key(c)" [selected]="key(c) === key(f.position)">{{ c.label }}</option> }
+          </select>
+        }
+      </div>
+    }
+    <div class="choices choices--fill">
+      <button type="button" class="seg seg--win-add" (click)="addFinish(true)">+ Finalizei</button>
+      <button type="button" class="seg seg--loss-add" (click)="addFinish(false)">+ Fui finalizado</button>
+    </div>
+  </div>
+
+  <div class="row">
+    <label class="label" [for]="'notes-' + index()">Observações</label>
+    <textarea class="text" rows="2" [id]="'notes-' + index()" placeholder="O que funcionou, o que travou…"
+      [value]="roll().notes ?? ''" (input)="change({ notes: $any($event.target).value || null })"></textarea>
+  </div>
+</article>

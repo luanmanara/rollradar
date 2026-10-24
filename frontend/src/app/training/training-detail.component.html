@@ -1,0 +1,94 @@
+@if (!auth.loaded()) {
+  <p class="card loading" aria-busy="true">Carregando…</p>
+} @else if (!auth.user()) {
+  <app-login-invite />
+} @else {
+  <article class="detail">
+    <a class="back" routerLink="/treinos">← Histórico</a>
+
+    @if (session(); as s) {
+      <header class="hero card">
+        <div class="hero__top">
+          <span class="eyebrow">Treino</span>
+          <div class="icons">
+            <a class="icon-btn" [routerLink]="['/treinos', s.id, 'editar']" aria-label="Editar treino" title="Editar treino">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z" /><path d="m13.5 6.5 4 4" /></svg>
+            </a>
+            <button type="button" class="icon-btn icon-btn--danger" aria-label="Apagar treino" title="Apagar treino"
+              [attr.aria-expanded]="confirming()" (click)="confirming.set(!confirming())">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16" /><path d="M9 7V4h6v3" /><path d="M6 7l1 13h10l1-13" /></svg>
+            </button>
+          </div>
+        </div>
+        @if (justSaved()) { <p class="saved" role="status"><span aria-hidden="true">✓</span> Treino salvo</p> }
+        <h1>{{ day(s.date) }}</h1>
+        <ul class="pills">
+          @for (t of tags(); track t) { <li>{{ t }}</li> }
+        </ul>
+        @if (confirming()) {
+          <div class="confirm" role="alertdialog" aria-label="Confirmar exclusão">
+            <span>Apagar este treino? Não dá para desfazer.</span>
+            <button type="button" class="btn btn--danger" [disabled]="deleting()" (click)="remove()">Apagar treino</button>
+            <button type="button" class="btn" (click)="confirming.set(false)">Cancelar</button>
+          </div>
+        }
+      </header>
+
+      <dl class="stats">
+        @for (st of stats(); track st.label) {
+          <div class="stat card stat--{{ st.tone }}">
+            <dt>{{ st.label }}</dt>
+            <dd>{{ st.value }}</dd>
+          </div>
+        }
+      </dl>
+
+      @if (s.focusPoint) {
+        <section class="card block focus">
+          <span class="eyebrow eyebrow--red">Ponto a corrigir</span>
+          <p class="lead">{{ s.focusPoint }}</p>
+        </section>
+      }
+
+      @if (s.techniqueNotes || s.techniques.length > 0) {
+        <section class="card block">
+          <span class="eyebrow">Técnica do dia</span>
+          @if (s.techniqueNotes) { <p class="lead">{{ s.techniqueNotes }}</p> }
+          @if (s.techniques.length > 0) {
+            <div class="links">
+              @for (id of s.techniques; track id) {
+                <a class="link-pill" [routerLink]="['/tecnica', id]" [title]="'Ver lutas com ' + techniqueName(id)">{{ techniqueName(id) }} <span aria-hidden="true">→</span></a>
+              }
+            </div>
+          }
+        </section>
+      }
+
+      @if (s.rolls.length > 0) {
+        <section class="rolls" aria-label="Rolas">
+          <h2 class="section-title">Rolas</h2>
+          @for (r of s.rolls; track r.order) { <app-roll-view [roll]="r" /> }
+        </section>
+      }
+
+      @if (scales().length > 0) {
+        <section class="card block">
+          <span class="eyebrow">Estado físico</span>
+          <div class="meters">
+            @for (x of scales(); track x.label) {
+              <div class="meter meter--{{ x.tone }}" role="img" [attr.aria-label]="x.label + ': ' + x.value + ' de 5'">
+                <span class="meter__label">{{ x.label }}</span>
+                <span class="meter__dots" aria-hidden="true">
+                  @for (d of dots; track d) { <span class="dot" [class.dot--on]="d <= (x.value ?? 0)"></span> }
+                </span>
+                <span class="meter__value" aria-hidden="true">{{ x.value }}/5</span>
+              </div>
+            }
+          </div>
+        </section>
+      }
+    }
+
+    @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+  </article>
+}

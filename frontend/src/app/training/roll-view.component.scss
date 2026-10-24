@@ -1,0 +1,136 @@
+// A recorded roll: head, the track of positions and submissions, folded notes.
+
+:host { display: block; }
+
+.card { padding: 20px; }
+
+.roll { display: grid; gap: 14px; }
+
+.roll__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+
+.roll__name {
+  margin-right: 4px;
+  font-size: 1.05rem;
+  overflow-wrap: anywhere;
+}
+
+.roll__head .result { margin-left: auto; }
+
+// Positions, then submissions, as dots joined by a line; wraps on narrow screens.
+.track {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.track__item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 6px 12px 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.86rem;
+  font-weight: 600;
+
+  // The line joining it to the previous one.
+  & + & { margin-left: 18px; }
+  & + &::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: -19px;
+    width: 18px;
+    height: 2px;
+    background: var(--line);
+  }
+
+  small { margin-left: 4px; color: var(--muted); font-weight: 500; }
+}
+
+.track__dot {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--muted);
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.track__text { min-width: 0; overflow-wrap: anywhere; }
+
+.track__state {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.track__item--bem {
+  border-color: var(--green-100);
+  .track__dot { border-color: var(--green-ink); background: var(--green-ink); }
+  .track__state { background: var(--green-100); color: var(--green-ink); }
+}
+
+.track__item--mal {
+  border-color: var(--red-100);
+  .track__dot { border-color: var(--red); background: var(--red); }
+  .track__state { background: var(--red-100); color: var(--red-ink); }
+}
+
+.track__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: var(--surface);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.track__item--win { border-color: var(--green-ink); background: var(--green-100); color: var(--green-ink); .track__icon { background: var(--green-ink); } }
+.track__item--loss { border-color: var(--red); background: var(--red-50); color: var(--red-ink); .track__icon { background: var(--red-ink); } }
+
+// Notes folded to two lines until asked.
+.notes {
+  padding: 10px 14px;
+  border-left: 3px solid var(--blue-100);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--page);
+
+  p {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    white-space: pre-line;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  &--open p { display: block; }
+}
+
+.notes__toggle {
+  margin-top: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--blue);
+  font-size: 0.84rem;
+  font-weight: 700;
+}

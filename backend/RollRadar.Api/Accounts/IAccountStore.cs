@@ -19,4 +19,7 @@ public interface IAccountStore
 
     /// <summary>Null when there is no such user (e.g. it was deleted after the cookie was issued).</summary>
     Task<Account?> FindAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Deletes the user with everything they recorded (logins, diary, partners, positions). False when not found.</summary>
+    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }

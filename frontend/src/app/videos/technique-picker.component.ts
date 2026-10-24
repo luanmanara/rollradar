@@ -21,6 +21,14 @@ export class TechniquePickerComponent {
   searched = output<string>();
   /** Emits the athlete chosen in the list. */
   athletePicked = output<AthleteSummary>();
+  /** Emits the technique chosen in the list (before `searched`), for pickers that tag techniques. */
+  picked = output<TechniqueSummary>();
+
+  /** Lets other screens reuse the picker, e.g. the training diary picks techniques with it. */
+  placeholder = input('Digite uma técnica ou um atleta: montada, armbar, Gordon Ryan…');
+  submitLabel = input('Buscar');
+  /** Unique per page when the page has more than one picker. */
+  inputId = input('technique-input');
 
   open = signal(false);
   active = signal(-1);
@@ -46,7 +54,7 @@ export class TechniquePickerComponent {
 
   showList = computed(() => this.open() && this.options() > 0);
 
-  readonly listId = 'technique-suggestions';
+  listId = computed(() => `${this.inputId()}-suggestions`);
 
   onInput(value: string): void {
     this.query.set(value);
@@ -93,6 +101,7 @@ export class TechniquePickerComponent {
 
   choose(t: TechniqueSummary): void {
     this.query.set(searchName(t));
+    this.picked.emit(t);
     this.submit();
   }
 
@@ -104,6 +113,6 @@ export class TechniquePickerComponent {
   }
 
   optionId(index: number): string {
-    return `${this.listId}-${index}`;
+    return `${this.listId()}-${index}`;
   }
 }

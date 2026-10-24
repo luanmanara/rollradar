@@ -48,4 +48,8 @@ public class DbAccountStore(RollRadarDbContext db) : IAccountStore
             .Where(u => u.Id == id)
             .Select(u => new Account(u.Id, u.Email, u.DisplayName))
             .FirstOrDefaultAsync(cancellationToken);
+
+    /// <summary>Every table of the user's data has a cascading foreign key to users, so one delete removes it all.</summary>
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default) =>
+        await db.Users.Where(u => u.Id == id).ExecuteDeleteAsync(cancellationToken) > 0;
 }

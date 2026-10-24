@@ -1,20 +1,20 @@
 <form class="picker" role="search" (submit)="$event.preventDefault(); submit()">
-  <label class="sr-only" for="technique-input">Técnica</label>
+  <label class="sr-only" [for]="inputId()">Técnica</label>
   <div class="field">
     <svg class="field__icon" viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
     </svg>
     <input
-      id="technique-input"
+      [id]="inputId()"
       type="text"
       autocomplete="off"
       spellcheck="false"
       role="combobox"
       aria-autocomplete="list"
       [attr.aria-expanded]="showList()"
-      [attr.aria-controls]="listId"
+      [attr.aria-controls]="listId()"
       [attr.aria-activedescendant]="active() >= 0 ? optionId(active()) : null"
-      placeholder="Digite uma técnica ou um atleta: montada, armbar, Gordon Ryan…"
+      [placeholder]="placeholder()"
       [value]="query()"
       (input)="onInput($any($event.target).value)"
       (keydown)="onKeydown($event)"
@@ -22,7 +22,7 @@
       (blur)="open.set(false)" />
 
     @if (showList()) {
-      <ul class="list" role="listbox" [id]="listId">
+      <ul class="list" role="listbox" [id]="listId()">
         @if (!query().trim()) {
           <li class="list__heading" role="presentation">Mais encontradas nas lutas</li>
         } @else if (fuzzy()) {
@@ -71,5 +71,5 @@
       </ul>
     }
   </div>
-  <button type="submit" class="submit" [disabled]="loading()">Buscar</button>
+  <button type="submit" class="submit" [disabled]="loading()">{{ submitLabel() }}</button>
 </form>

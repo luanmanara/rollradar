@@ -19,6 +19,7 @@ import { athleteNames, matchAthletes, normalize, searchName, similarTechniques, 
 import { TechniquePickerComponent } from './technique-picker.component';
 import { VideoModalComponent } from './video-modal.component';
 import { VideoService } from './video.service';
+import { FocusBannerComponent } from '../training/focus-banner.component';
 
 /** Moments shown per video before "ver mais". */
 export const MOMENTS_PREVIEW = 3;
@@ -53,7 +54,7 @@ export const RELATED_LIMIT = 8;
   selector: 'app-video-search',
   imports: [
     FightTimelineComponent, FormatTimePipe, HighlightPipe, MomentGridComponent, TechniqueBrowserComponent, TechniqueComboComponent, TechniqueHighlightsComponent,
-    TechniquePickerComponent, VideoModalComponent
+    TechniquePickerComponent, VideoModalComponent, FocusBannerComponent
   ],
   templateUrl: './video-search.component.html',
   styleUrl: './video-search.component.scss'

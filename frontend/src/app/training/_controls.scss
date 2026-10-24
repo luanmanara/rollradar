@@ -1,0 +1,107 @@
+// Form controls of the diary screens (session form, roll cards, history filters). Mobile first: big tap targets.
+
+// Labels, text boxes and links, all a filter bar needs.
+@mixin fields {
+  .label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--ink);
+    font-size: 0.86rem;
+    font-weight: 600;
+
+    small { color: var(--muted); font-weight: 400; }
+  }
+
+  .text {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    font: inherit;
+    resize: vertical;
+
+    &:focus { outline: none; border-color: var(--blue); box-shadow: var(--focus); }
+  }
+
+  .link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--blue);
+    font-size: 0.86rem;
+    font-weight: 600;
+    text-decoration: underline;
+  }
+}
+
+@mixin controls {
+  @include fields;
+
+  .choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+
+    // Equal buttons sharing the row; long labels ("Ninguém finalizou") wrap instead of widening the page.
+    &--fill > * { flex: 1 1 0; min-width: 0; padding-inline: 8px; white-space: normal; line-height: 1.2; }
+  }
+
+  .seg {
+    min-height: 40px;
+    padding: 6px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    font-size: 0.9rem;
+    font-weight: 600;
+    white-space: nowrap;
+
+    &:hover { border-color: var(--blue-100); }
+    &[aria-pressed="true"] { border-color: var(--blue); background: var(--blue-50); color: var(--blue); }
+    &--win[aria-pressed="true"] { border-color: var(--green-ink); background: var(--green-100); color: var(--green-ink); }
+    &--loss[aria-pressed="true"] { border-color: var(--red); background: var(--red-50); color: var(--red-ink); }
+    &--primary { border-color: var(--blue); background: var(--blue); color: #fff; }
+    &--primary:hover { background: var(--blue-hover); }
+    &:disabled { opacity: 0.55; cursor: default; }
+  }
+
+  .chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+
+  .chip {
+    min-height: 36px;
+    padding: 5px 12px;
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    font-size: 0.86rem;
+    font-weight: 600;
+
+    &--on { border-color: var(--blue); background: var(--blue-50); color: var(--blue); }
+    &--bem { border-color: var(--green-ink); background: var(--green-100); color: var(--green-ink); }
+    &--mal { border-color: var(--red); background: var(--red-100); color: var(--red-ink); }
+    &--add { border-style: dashed; color: var(--muted); }
+  }
+
+  .chip__state { font-weight: 500; }
+
+  .belt {
+    min-height: 36px;
+    padding: 4px 12px;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    font-size: 0.84rem;
+    font-weight: 600;
+
+    // A stripe of the belt's color, filled when chosen.
+    box-shadow: inset 0 -4px 0 var(--belt);
+    &[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 -100px 0 var(--belt); color: var(--belt-ink); }
+    &--branca { --belt: #f1f3f7; --belt-ink: var(--ink); }
+    &--azul { --belt: #1d4ed8; --belt-ink: #fff; }
+    &--roxa { --belt: #6d28d9; --belt-ink: #fff; }
+    &--marrom { --belt: #7c4a2a; --belt-ink: #fff; }
+    &--preta { --belt: #111827; --belt-ink: #fff; }
+  }
+}

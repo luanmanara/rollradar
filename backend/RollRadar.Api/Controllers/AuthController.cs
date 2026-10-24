@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RollRadar.Api.Accounts;
+using RollRadar.Api.Training;
 
 namespace RollRadar.Api.Controllers;
 
@@ -53,6 +54,26 @@ public class AuthController(IAccountStore accounts, IAuthenticationSchemeProvide
             return Unauthorized();
         }
         return new Me(account.Id, account.Email, account.DisplayName);
+    }
+
+    /// <summary>Everything the user recorded on the site, as a JSON file to download.</summary>
+    [HttpGet("conta/exportar")]
+    [Authorize(Policy = UserAuthentication.Policy)]
+    public async Task<IActionResult> Export([FromServices] ITrainingStore training, CancellationToken cancellationToken)
+    {
+        if (User.FindUserId() is not { } id || await training.ExportAsync(id, cancellationToken) is not { } export) return Unauthorized();
+        Response.Headers.ContentDisposition = $"attachment; filename=\"rollradar-dados-{DateTime.UtcNow:yyyy-MM-dd}.json\"";
+        return Ok(export);
+    }
+
+    /// <summary>Deletes the account and all its data for good, and ends the session. The site asks for confirmation first.</summary>
+    [HttpDelete("conta")]
+    [Authorize(Policy = UserAuthentication.Policy)]
+    public async Task<IActionResult> DeleteAccount(CancellationToken cancellationToken)
+    {
+        if (User.FindUserId() is { } id) await accounts.DeleteAsync(id, cancellationToken);
+        await HttpContext.SignOutAsync(UserAuthentication.CookieScheme);
+        return NoContent();
     }
 }
 

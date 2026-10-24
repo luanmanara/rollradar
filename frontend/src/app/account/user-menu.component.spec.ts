@@ -50,6 +50,10 @@ describe('UserMenuComponent', () => {
     const fixture = await render({ id: 'u1', email: 'ana@exemplo.com', nome: 'Ana Souza' });
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('.user__name')?.textContent).toContain('Ana Souza');
+    expect(el.querySelector('.user__name')?.getAttribute('href')).toBe('/conta');
+    const diary = el.querySelector('.user__btn--diary');
+    expect(diary?.textContent).toContain('Diário');
+    expect(diary?.getAttribute('href')).toBe('/treinos');
 
     (el.querySelector('button') as HTMLButtonElement).click();
     http.expectOne(r => r.method === 'POST' && r.url === '/api/auth/logout').flush(null, { status: 204, statusText: 'No Content' });
