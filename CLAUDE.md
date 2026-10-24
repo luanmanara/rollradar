@@ -80,6 +80,11 @@ The original pipeline, connected by files on disk:
      moments with curation and votes, keyset pages) is for external clients and needs the `leitura` scope.
      Rate limits: per token for the data API, per IP for the site search (`ApiAccess` in appsettings). Curation
      still uses `X-Curator-Key`. Tokens are created/revoked with the collector's `token` command.
+     User accounts (`Accounts/`, `AuthController`): Google signs in (`Auth:Google:ClientId`/`ClientSecret` in
+     user-secrets; without them the API runs and `/api/auth/login` answers 503), then the `rr_session` cookie
+     (HttpOnly, Lax, 30 days sliding, 401 instead of redirect) carries the `users.id` claim. Account endpoints
+     (`/api/eu`, logout, later diary and map) use the `"User"` policy; the cookie never opens the data API.
+     Data Protection keys live in `data_protection_keys`, so cookies survive restarts. Setup: `docs/login-google.md`.
    - Frontend (`src/app/videos/`): standalone components, signals, zoneless, OnPush by default.
      `technique-picker` (autocomplete matching PT/EN/aliases client-side, `technique-match.ts`),
      `technique-browser` (category tabs), `video-search` (results, athlete filter client-side, search kept in

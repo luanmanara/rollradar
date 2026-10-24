@@ -186,3 +186,31 @@ public class ApiTokenEntity
     public DateTime? RevokedAt { get; set; }
     public DateTime? LastUsedAt { get; set; }
 }
+
+/// <summary>A person with an account on the site (signed in with Google); the base of the training diary and game map.</summary>
+public class UserEntity
+{
+    public Guid Id { get; set; }
+
+    /// <summary>As given by the login provider on the latest sign-in.</summary>
+    public string? Email { get; set; }
+
+    public string? DisplayName { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime LastLoginAt { get; set; }
+
+    public List<UserLoginEntity> Logins { get; set; } = [];
+}
+
+/// <summary>An external login of a user, e.g. provider "Google" with the Google account id as key.</summary>
+public class UserLoginEntity
+{
+    public long Id { get; set; }
+    public Guid UserId { get; set; }
+    public required string Provider { get; set; }
+
+    /// <summary>The provider's stable id of the account (Google "sub"), not the email, which can change.</summary>
+    public required string ProviderKey { get; set; }
+
+    public UserEntity? User { get; set; }
+}

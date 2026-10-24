@@ -52,8 +52,14 @@
 }
 
 .tagline {
+  flex: 1 1 auto;
   color: rgba(255, 255, 255, 0.78);
   font-size: 0.95rem;
+}
+
+.account {
+  align-self: center;
+  margin-left: auto;
 }
 
 .main {

@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
@@ -8,8 +9,9 @@ namespace RollRadar.Api.Data;
 /// <summary>
 /// PostgreSQL schema. Table and column names are snake_case (UseSnakeCaseNamingConvention in
 /// Program.cs); enums are stored as snake_case strings, e.g. CaptionStatus.SemLegenda -> "sem_legenda".
+/// Also keeps the Data Protection keys, so login and voter cookies stay valid after a restart or deploy.
 /// </summary>
-public class RollRadarDbContext(DbContextOptions<RollRadarDbContext> options) : DbContext(options)
+public class RollRadarDbContext(DbContextOptions<RollRadarDbContext> options) : DbContext(options), IDataProtectionKeyContext
 {
     public DbSet<ChannelEntity> Channels => Set<ChannelEntity>();
     public DbSet<VideoEntity> Videos => Set<VideoEntity>();
@@ -20,6 +22,9 @@ public class RollRadarDbContext(DbContextOptions<RollRadarDbContext> options) : 
     public DbSet<MomentVoteEntity> MomentVotes => Set<MomentVoteEntity>();
     public DbSet<ApiTokenEntity> ApiTokens => Set<ApiTokenEntity>();
     public DbSet<AthleteEntity> Athletes => Set<AthleteEntity>();
+    public DbSet<UserEntity> Users => Set<UserEntity>();
+    public DbSet<UserLoginEntity> UserLogins => Set<UserLoginEntity>();
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -100,6 +105,23 @@ public class RollRadarDbContext(DbContextOptions<RollRadarDbContext> options) : 
             e.HasIndex(t => t.TokenHash).IsUnique();
             e.HasIndex(t => t.Name).IsUnique();
         });
+
+        modelBuilder.Entity<UserEntity>(e =>
+        {
+            e.ToTable("users");
+            e.Property(u => u.CreatedAt).HasDefaultValueSql("now()");
+            e.Property(u => u.LastLoginAt).HasDefaultValueSql("now()");
+        });
+
+        modelBuilder.Entity<UserLoginEntity>(e =>
+        {
+            e.ToTable("user_logins");
+            e.HasOne(l => l.User).WithMany(u => u.Logins).HasForeignKey(l => l.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(l => new { l.Provider, l.ProviderKey }).IsUnique();
+        });
+
+        modelBuilder.Entity<DataProtectionKey>(e => e.ToTable("data_protection_keys"));
     }
 }
 

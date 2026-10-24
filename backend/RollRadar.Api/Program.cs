@@ -2,8 +2,10 @@ using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using RollRadar.Api.Accounts;
 using RollRadar.Api.Athletes;
 using RollRadar.Api.Auth;
 using RollRadar.Api.Controllers;
@@ -55,17 +57,24 @@ builder.Services.AddSingleton(sp =>
 builder.Services.AddScoped<IVideoSearchService, DbVideoSearchService>();
 
 builder.Services.Configure<CurationOptions>(builder.Configuration.GetSection(CurationOptions.Section));
-builder.Services.AddDataProtection();
+// Keys in the database (data_protection_keys), so login and voter cookies survive restarts and deploys.
+builder.Services.AddDataProtection()
+    .SetApplicationName("RollRadar")
+    .PersistKeysToDbContext<RollRadarDbContext>();
 builder.Services.AddSingleton<VoterIdentity>();
 builder.Services.AddScoped<ICurationStore, EfCurationStore>();
 
 // External clients read the data with a bearer token (api_tokens). The site's endpoints opt out with
 // [AllowAnonymous]; anything else needs a valid token, so a new endpoint is never open by accident.
 builder.Services.Configure<ApiAccessOptions>(builder.Configuration.GetSection(ApiAccessOptions.Section));
+// Site accounts (Google + rr_session cookie) only count where the "User" policy asks for them.
+builder.Services.AddScoped<IAccountStore, DbAccountStore>();
 builder.Services.AddAuthentication(ApiTokenAuthenticationHandler.Scheme)
-    .AddScheme<AuthenticationSchemeOptions, ApiTokenAuthenticationHandler>(ApiTokenAuthenticationHandler.Scheme, null);
+    .AddScheme<AuthenticationSchemeOptions, ApiTokenAuthenticationHandler>(ApiTokenAuthenticationHandler.Scheme, null)
+    .AddUserAccounts(builder.Configuration);
 builder.Services.AddAuthorizationBuilder()
     .SetFallbackPolicy(new AuthorizationPolicyBuilder(ApiTokenAuthenticationHandler.Scheme).RequireAuthenticatedUser().Build())
+    .AddUserPolicy()
     .AddPolicy(DataController.ReadPolicy, policy => policy
         .AddAuthenticationSchemes(ApiTokenAuthenticationHandler.Scheme)
         .RequireClaim(ApiTokenAuthenticationHandler.ScopeClaim, ApiScopes.Read));
