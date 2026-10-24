@@ -23,6 +23,29 @@ namespace RollRadar.Api.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FriendlyName")
+                        .HasColumnType("text")
+                        .HasColumnName("friendly_name");
+
+                    b.Property<string>("Xml")
+                        .HasColumnType("text")
+                        .HasColumnName("xml");
+
+                    b.HasKey("Id")
+                        .HasName("pk_data_protection_keys");
+
+                    b.ToTable("data_protection_keys", (string)null);
+                });
+
             modelBuilder.Entity("RollRadar.Api.Data.ApiTokenEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -366,6 +389,75 @@ namespace RollRadar.Api.Data.Migrations
                     b.ToTable("transcript_segments", (string)null);
                 });
 
+            modelBuilder.Entity("RollRadar.Api.Data.UserEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("DisplayName")
+                        .HasColumnType("text")
+                        .HasColumnName("display_name");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("text")
+                        .HasColumnName("email");
+
+                    b.Property<DateTime>("LastLoginAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_login_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.HasKey("Id")
+                        .HasName("pk_users");
+
+                    b.ToTable("users", (string)null);
+                });
+
+            modelBuilder.Entity("RollRadar.Api.Data.UserLoginEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("provider");
+
+                    b.Property<string>("ProviderKey")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("provider_key");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_user_logins");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_user_logins_user_id");
+
+                    b.HasIndex("Provider", "ProviderKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_user_logins_provider_provider_key");
+
+                    b.ToTable("user_logins", (string)null);
+                });
+
             modelBuilder.Entity("RollRadar.Api.Data.VideoEntity", b =>
                 {
                     b.Property<string>("Id")
@@ -497,6 +589,18 @@ namespace RollRadar.Api.Data.Migrations
                     b.Navigation("Video");
                 });
 
+            modelBuilder.Entity("RollRadar.Api.Data.UserLoginEntity", b =>
+                {
+                    b.HasOne("RollRadar.Api.Data.UserEntity", "User")
+                        .WithMany("Logins")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_logins_users_user_id");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("RollRadar.Api.Data.VideoEntity", b =>
                 {
                     b.HasOne("RollRadar.Api.Data.ChannelEntity", "Channel")
@@ -522,6 +626,11 @@ namespace RollRadar.Api.Data.Migrations
             modelBuilder.Entity("RollRadar.Api.Data.TechniqueMomentEntity", b =>
                 {
                     b.Navigation("Votes");
+                });
+
+            modelBuilder.Entity("RollRadar.Api.Data.UserEntity", b =>
+                {
+                    b.Navigation("Logins");
                 });
 
             modelBuilder.Entity("RollRadar.Api.Data.VideoEntity", b =>
