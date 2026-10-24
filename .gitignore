@@ -491,3 +491,6 @@ samples/
 
 # graphify: grafo de conhecimento gerado localmente
 graphify-out/
+
+# Local docs and screenshots (docs/telas), kept out of git
+docs/

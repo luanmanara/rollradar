@@ -173,6 +173,108 @@ namespace RollRadar.Api.Data.Migrations
                     b.ToTable("channels", (string)null);
                 });
 
+            modelBuilder.Entity("RollRadar.Api.Data.FocusPointEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<Guid>("OriginSessionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("origin_session_id");
+
+                    b.Property<string>("Review")
+                        .HasColumnType("text")
+                        .HasColumnName("review");
+
+                    b.Property<Guid?>("ReviewedSessionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reviewed_session_id");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_focus_points");
+
+                    b.HasIndex("OriginSessionId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_focus_points_origin_session_id");
+
+                    b.HasIndex("ReviewedSessionId")
+                        .HasDatabaseName("ix_focus_points_reviewed_session_id");
+
+                    b.HasIndex("UserId", "Review", "CreatedAt")
+                        .HasDatabaseName("ix_focus_points_user_id_review_created_at");
+
+                    b.ToTable("focus_points", (string)null);
+                });
+
+            modelBuilder.Entity("RollRadar.Api.Data.GameNodeEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<bool>("Hidden")
+                        .HasColumnType("boolean")
+                        .HasColumnName("hidden");
+
+                    b.Property<string>("Label")
+                        .HasColumnType("text")
+                        .HasColumnName("label");
+
+                    b.Property<string>("Side")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("side");
+
+                    b.Property<string>("TechniqueId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("technique_id");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_game_nodes");
+
+                    b.HasIndex("TechniqueId")
+                        .HasDatabaseName("ix_game_nodes_technique_id");
+
+                    b.HasIndex("UserId", "TechniqueId", "Side")
+                        .IsUnique()
+                        .HasDatabaseName("ix_game_nodes_user_id_technique_id_side");
+
+                    b.ToTable("game_nodes", (string)null);
+                });
+
             modelBuilder.Entity("RollRadar.Api.Data.MomentVoteEntity", b =>
                 {
                     b.Property<long>("Id")
@@ -217,6 +319,199 @@ namespace RollRadar.Api.Data.Migrations
                         .HasDatabaseName("ix_moment_votes_moment_id_voter_id");
 
                     b.ToTable("moment_votes", (string)null);
+                });
+
+            modelBuilder.Entity("RollRadar.Api.Data.PartnerEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Belt")
+                        .HasColumnType("text")
+                        .HasColumnName("belt");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("normalized_name");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_partners");
+
+                    b.HasIndex("UserId", "NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("ix_partners_user_id_normalized_name");
+
+                    b.ToTable("partners", (string)null);
+                });
+
+            modelBuilder.Entity("RollRadar.Api.Data.RollEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<int?>("DurationMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("duration_minutes");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text")
+                        .HasColumnName("notes");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("integer")
+                        .HasColumnName("order");
+
+                    b.Property<string>("PartnerBelt")
+                        .HasColumnType("text")
+                        .HasColumnName("partner_belt");
+
+                    b.Property<long?>("PartnerId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("partner_id");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("session_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_rolls");
+
+                    b.HasIndex("PartnerId")
+                        .HasDatabaseName("ix_rolls_partner_id");
+
+                    b.HasIndex("SessionId", "Order")
+                        .HasDatabaseName("ix_rolls_session_id_order");
+
+                    b.ToTable("rolls", (string)null);
+                });
+
+            modelBuilder.Entity("RollRadar.Api.Data.RollFinishEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<bool>("ByMe")
+                        .HasColumnType("boolean")
+                        .HasColumnName("by_me");
+
+                    b.Property<long?>("NodeId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("node_id");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("integer")
+                        .HasColumnName("order");
+
+                    b.Property<long>("RollId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("roll_id");
+
+                    b.Property<string>("TechniqueId")
+                        .HasColumnType("text")
+                        .HasColumnName("technique_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_roll_finishes");
+
+                    b.HasIndex("NodeId")
+                        .HasDatabaseName("ix_roll_finishes_node_id");
+
+                    b.HasIndex("TechniqueId")
+                        .HasDatabaseName("ix_roll_finishes_technique_id");
+
+                    b.HasIndex("RollId", "Order")
+                        .HasDatabaseName("ix_roll_finishes_roll_id_order");
+
+                    b.ToTable("roll_finishes", (string)null);
+                });
+
+            modelBuilder.Entity("RollRadar.Api.Data.RollStepEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("NodeId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("node_id");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("integer")
+                        .HasColumnName("order");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("outcome");
+
+                    b.Property<long>("RollId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("roll_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_roll_steps");
+
+                    b.HasIndex("NodeId")
+                        .HasDatabaseName("ix_roll_steps_node_id");
+
+                    b.HasIndex("RollId", "Order")
+                        .HasDatabaseName("ix_roll_steps_roll_id_order");
+
+                    b.ToTable("roll_steps", (string)null);
+                });
+
+            modelBuilder.Entity("RollRadar.Api.Data.SessionTechniqueEntity", b =>
+                {
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("session_id");
+
+                    b.Property<string>("TechniqueId")
+                        .HasColumnType("text")
+                        .HasColumnName("technique_id");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer")
+                        .HasColumnName("position");
+
+                    b.HasKey("SessionId", "TechniqueId")
+                        .HasName("pk_session_techniques");
+
+                    b.HasIndex("TechniqueId")
+                        .HasDatabaseName("ix_session_techniques_technique_id");
+
+                    b.ToTable("session_techniques", (string)null);
                 });
 
             modelBuilder.Entity("RollRadar.Api.Data.TechniqueAliasEntity", b =>
@@ -351,6 +646,71 @@ namespace RollRadar.Api.Data.Migrations
                         .HasDatabaseName("ix_technique_moments_video_id_technique_id_start_seconds");
 
                     b.ToTable("technique_moments", (string)null);
+                });
+
+            modelBuilder.Entity("RollRadar.Api.Data.TrainingSessionEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Attire")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("attire");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("duration_minutes");
+
+                    b.Property<int?>("Energy")
+                        .HasColumnType("integer")
+                        .HasColumnName("energy");
+
+                    b.Property<string>("Format")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("format");
+
+                    b.Property<int?>("Pain")
+                        .HasColumnType("integer")
+                        .HasColumnName("pain");
+
+                    b.Property<int?>("Sleep")
+                        .HasColumnType("integer")
+                        .HasColumnName("sleep");
+
+                    b.Property<string>("TechniqueNotes")
+                        .HasColumnType("text")
+                        .HasColumnName("technique_notes");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_training_sessions");
+
+                    b.HasIndex("UserId", "Date")
+                        .HasDatabaseName("ix_training_sessions_user_id_date");
+
+                    b.ToTable("training_sessions", (string)null);
                 });
 
             modelBuilder.Entity("RollRadar.Api.Data.TranscriptSegmentEntity", b =>
@@ -532,6 +892,56 @@ namespace RollRadar.Api.Data.Migrations
                     b.ToTable("videos", (string)null);
                 });
 
+            modelBuilder.Entity("RollRadar.Api.Data.FocusPointEntity", b =>
+                {
+                    b.HasOne("RollRadar.Api.Data.TrainingSessionEntity", "OriginSession")
+                        .WithMany()
+                        .HasForeignKey("OriginSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_focus_points_training_sessions_origin_session_id");
+
+                    b.HasOne("RollRadar.Api.Data.TrainingSessionEntity", "ReviewedSession")
+                        .WithMany()
+                        .HasForeignKey("ReviewedSessionId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_focus_points_training_sessions_reviewed_session_id");
+
+                    b.HasOne("RollRadar.Api.Data.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_focus_points_users_user_id");
+
+                    b.Navigation("OriginSession");
+
+                    b.Navigation("ReviewedSession");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("RollRadar.Api.Data.GameNodeEntity", b =>
+                {
+                    b.HasOne("RollRadar.Api.Data.TechniqueEntity", "Technique")
+                        .WithMany()
+                        .HasForeignKey("TechniqueId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_game_nodes_techniques_technique_id");
+
+                    b.HasOne("RollRadar.Api.Data.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_game_nodes_users_user_id");
+
+                    b.Navigation("Technique");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("RollRadar.Api.Data.MomentVoteEntity", b =>
                 {
                     b.HasOne("RollRadar.Api.Data.TechniqueMomentEntity", "Moment")
@@ -542,6 +952,108 @@ namespace RollRadar.Api.Data.Migrations
                         .HasConstraintName("fk_moment_votes_technique_moments_moment_id");
 
                     b.Navigation("Moment");
+                });
+
+            modelBuilder.Entity("RollRadar.Api.Data.PartnerEntity", b =>
+                {
+                    b.HasOne("RollRadar.Api.Data.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_partners_users_user_id");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("RollRadar.Api.Data.RollEntity", b =>
+                {
+                    b.HasOne("RollRadar.Api.Data.PartnerEntity", "Partner")
+                        .WithMany()
+                        .HasForeignKey("PartnerId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_rolls_partners_partner_id");
+
+                    b.HasOne("RollRadar.Api.Data.TrainingSessionEntity", "Session")
+                        .WithMany("Rolls")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_rolls_training_sessions_session_id");
+
+                    b.Navigation("Partner");
+
+                    b.Navigation("Session");
+                });
+
+            modelBuilder.Entity("RollRadar.Api.Data.RollFinishEntity", b =>
+                {
+                    b.HasOne("RollRadar.Api.Data.GameNodeEntity", "Node")
+                        .WithMany()
+                        .HasForeignKey("NodeId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_roll_finishes_game_nodes_node_id");
+
+                    b.HasOne("RollRadar.Api.Data.RollEntity", "Roll")
+                        .WithMany("Finishes")
+                        .HasForeignKey("RollId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_roll_finishes_rolls_roll_id");
+
+                    b.HasOne("RollRadar.Api.Data.TechniqueEntity", "Technique")
+                        .WithMany()
+                        .HasForeignKey("TechniqueId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_roll_finishes_techniques_technique_id");
+
+                    b.Navigation("Node");
+
+                    b.Navigation("Roll");
+
+                    b.Navigation("Technique");
+                });
+
+            modelBuilder.Entity("RollRadar.Api.Data.RollStepEntity", b =>
+                {
+                    b.HasOne("RollRadar.Api.Data.GameNodeEntity", "Node")
+                        .WithMany()
+                        .HasForeignKey("NodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_roll_steps_game_nodes_node_id");
+
+                    b.HasOne("RollRadar.Api.Data.RollEntity", "Roll")
+                        .WithMany("Steps")
+                        .HasForeignKey("RollId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_roll_steps_rolls_roll_id");
+
+                    b.Navigation("Node");
+
+                    b.Navigation("Roll");
+                });
+
+            modelBuilder.Entity("RollRadar.Api.Data.SessionTechniqueEntity", b =>
+                {
+                    b.HasOne("RollRadar.Api.Data.TrainingSessionEntity", "Session")
+                        .WithMany("Techniques")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_session_techniques_training_sessions_session_id");
+
+                    b.HasOne("RollRadar.Api.Data.TechniqueEntity", "Technique")
+                        .WithMany()
+                        .HasForeignKey("TechniqueId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_session_techniques_techniques_technique_id");
+
+                    b.Navigation("Session");
+
+                    b.Navigation("Technique");
                 });
 
             modelBuilder.Entity("RollRadar.Api.Data.TechniqueAliasEntity", b =>
@@ -575,6 +1087,18 @@ namespace RollRadar.Api.Data.Migrations
                     b.Navigation("Technique");
 
                     b.Navigation("Video");
+                });
+
+            modelBuilder.Entity("RollRadar.Api.Data.TrainingSessionEntity", b =>
+                {
+                    b.HasOne("RollRadar.Api.Data.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_training_sessions_users_user_id");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("RollRadar.Api.Data.TranscriptSegmentEntity", b =>
@@ -618,6 +1142,13 @@ namespace RollRadar.Api.Data.Migrations
                     b.Navigation("Videos");
                 });
 
+            modelBuilder.Entity("RollRadar.Api.Data.RollEntity", b =>
+                {
+                    b.Navigation("Finishes");
+
+                    b.Navigation("Steps");
+                });
+
             modelBuilder.Entity("RollRadar.Api.Data.TechniqueEntity", b =>
                 {
                     b.Navigation("Aliases");
@@ -626,6 +1157,13 @@ namespace RollRadar.Api.Data.Migrations
             modelBuilder.Entity("RollRadar.Api.Data.TechniqueMomentEntity", b =>
                 {
                     b.Navigation("Votes");
+                });
+
+            modelBuilder.Entity("RollRadar.Api.Data.TrainingSessionEntity", b =>
+                {
+                    b.Navigation("Rolls");
+
+                    b.Navigation("Techniques");
                 });
 
             modelBuilder.Entity("RollRadar.Api.Data.UserEntity", b =>

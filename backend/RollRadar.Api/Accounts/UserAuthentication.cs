@@ -49,6 +49,15 @@ public static class UserAuthentication
                 context.Response.StatusCode = StatusCodes.Status403Forbidden;
                 return Task.CompletedTask;
             };
+            // A cookie outlives a deleted account (on another device, say): it stops counting once the user is gone.
+            options.Events.OnValidatePrincipal = async context =>
+            {
+                var accounts = context.HttpContext.RequestServices.GetRequiredService<IAccountStore>();
+                if (context.Principal?.FindUserId() is { } id && await accounts.FindAsync(id, context.HttpContext.RequestAborted) is not null)
+                    return;
+                context.RejectPrincipal();
+                await context.HttpContext.SignOutAsync(CookieScheme);
+            };
         });
 
         var clientId = configuration[ClientIdKey];

@@ -1,3 +1,8 @@
+@if (isHome()) {
+  <!-- Signed-in users see the point to fix of their last session; visitors see nothing. -->
+  <app-focus-banner />
+}
+
 <section class="card search">
   <app-technique-picker
     [techniques]="techniques()"

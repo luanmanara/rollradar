@@ -54,7 +54,7 @@ public sealed class AccountTests(PostgresFixture database) : IAsyncLifetime
         api.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
     /// <summary>The rr_session cookie the API would issue after Google signs the user in.</summary>
-    private static string SessionCookie(WebApplicationFactory<Program> api, Guid userId)
+    internal static string SessionCookie(WebApplicationFactory<Program> api, Guid userId)
     {
         var options = api.Services.GetRequiredService<IOptionsMonitor<CookieAuthenticationOptions>>().Get(UserAuthentication.CookieScheme);
         var identity = new ClaimsIdentity([new Claim(UserAuthentication.UserIdClaim, userId.ToString())], UserAuthentication.CookieScheme);
