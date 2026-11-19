@@ -1,0 +1,121 @@
+@use '../training/controls';
+
+// Map page: header card, then the list or graph with the highlights beside it (below on a phone).
+
+:host { display: block; }
+
+@include controls.fields;
+
+.loading { padding: 20px; color: var(--muted); }
+.muted { color: var(--muted); font-size: 0.9rem; }
+.error { padding: 10px 14px; border-radius: var(--radius-sm); background: var(--red-50); color: var(--red-ink); }
+
+.page { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+
+.hero { display: grid; gap: 10px; padding: 22px 20px; }
+
+.hero__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  h1 { font-size: clamp(1.7rem, 6vw, 2.3rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
+}
+
+.hero__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.views { display: inline-flex; padding: 3px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
+
+.view {
+  min-height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  font-weight: 700;
+
+  &[aria-pressed="true"] { background: var(--blue); color: #fff; }
+}
+
+.add { display: grid; gap: 8px; padding: 12px; border: 1px dashed var(--line); border-radius: var(--radius-sm); }
+
+.choices { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.seg {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font-weight: 600;
+
+  &[aria-pressed="true"] { border-color: var(--blue); background: var(--blue-50); color: var(--blue); }
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+
+  &:hover { border-color: var(--blue); color: var(--blue); }
+  &--primary { justify-self: start; border-color: var(--blue); background: var(--blue); color: #fff; }
+  &--primary:hover { background: var(--blue-hover); color: #fff; }
+  &--ghost { border-color: transparent; color: var(--blue); }
+  &:disabled { opacity: 0.6; cursor: default; }
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+
+  @media (min-width: 960px) { grid-template-columns: minmax(0, 1fr) 280px; align-items: start; }
+}
+
+.main { display: grid; gap: 14px; min-width: 0; }
+
+.empty { display: grid; gap: 10px; justify-items: start; padding: 22px 20px; }
+.empty h2 { font-size: 1.2rem; }
+
+.hidden-list {
+  font-size: 0.88rem;
+
+  ul { margin: 6px 0 0; padding-left: 18px; }
+}
+
+.highlights { display: grid; gap: 12px; }
+
+.block { display: grid; gap: 10px; padding: 16px; }
+
+.eyebrow--green { background: var(--green-100); color: var(--green-ink); }
+
+.hl { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+
+.hl__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-weight: 600;
+  text-align: left;
+
+  span { min-width: 0; overflow-wrap: anywhere; }
+  &:hover { border-color: var(--blue); }
+}
+
+.good { color: var(--green-ink); }
+.bad { color: var(--red-ink); }

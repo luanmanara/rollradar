@@ -53,7 +53,7 @@ public class DbTrainingStore(RollRadarDbContext db) : ITrainingStore
                     ? new SaveResult(SaveStatus.AlreadyExists, await GetAsync(userId, input.Id, cancellationToken))
                     : new SaveResult(SaveStatus.Conflict);
 
-            var errors = await ValidateAsync(input, cancellationToken);
+            var errors = await ValidateAsync(userId, input, cancellationToken);
             if (errors.Count > 0) return SaveResult.Invalid(errors);
 
             var session = new TrainingSessionEntity { Id = input.Id, UserId = userId, CreatedAt = DateTime.UtcNow };
@@ -70,7 +70,7 @@ public class DbTrainingStore(RollRadarDbContext db) : ITrainingStore
             var session = await db.TrainingSessions.FirstOrDefaultAsync(s => s.Id == id && s.UserId == userId, cancellationToken);
             if (session is null) return new SaveResult(SaveStatus.NotFound);
 
-            var errors = await ValidateAsync(input, cancellationToken);
+            var errors = await ValidateAsync(userId, input, cancellationToken);
             if (errors.Count > 0) return SaveResult.Invalid(errors);
 
             // Rolls and tags are replaced as a whole, in one transaction with the new ones.
@@ -147,12 +147,16 @@ public class DbTrainingStore(RollRadarDbContext db) : ITrainingStore
             .ToListAsync(cancellationToken);
         var focusPoints = await db.FocusPoints.AsNoTracking().Where(f => f.UserId == userId).OrderBy(f => f.CreatedAt)
             .ToListAsync(cancellationToken);
+        var edges = await db.GameEdges.AsNoTracking().Where(e => e.UserId == userId).OrderBy(e => e.Id).ToListAsync(cancellationToken);
+        var videos = await db.MapVideos.AsNoTracking().Where(v => v.UserId == userId).OrderBy(v => v.Id).ToListAsync(cancellationToken);
         return new AccountExport(
             DateTime.UtcNow, user.Id, user.Email, user.DisplayName,
             await ToModelsAsync(sessions, cancellationToken),
             partners.Select(ToModel).ToList(),
             await GameNodesAsync(userId, cancellationToken),
-            focusPoints.Select(f => new ExportedFocusPoint(f.Id, f.Text, f.OriginSessionId, f.CreatedAt, SnakeCaseEnum.Name(f.Review), f.ReviewedSessionId)).ToList());
+            focusPoints.Select(f => new ExportedFocusPoint(f.Id, f.Text, f.OriginSessionId, f.CreatedAt, SnakeCaseEnum.Name(f.Review), f.ReviewedSessionId)).ToList(),
+            edges.Select(e => new ExportedEdge(e.Id, e.FromNodeId, e.ToNodeId, SnakeCaseEnum.Name(e.Kind), e.TechniqueId, e.Label, e.AgainstMe, e.CreatedAt)).ToList(),
+            videos.Select(v => new ExportedMapVideo(v.Id, v.NodeId, v.EdgeId, v.VideoId, v.StartSeconds, v.Note, v.CreatedAt)).ToList());
     }
 
     /// <summary>The user's positions, the most recently used first, then the newest never used.</summary>
@@ -169,14 +173,33 @@ public class DbTrainingStore(RollRadarDbContext db) : ITrainingStore
             .ToListAsync(cancellationToken);
         return nodes
             .OrderByDescending(n => n.LastUsed.HasValue).ThenByDescending(n => n.LastUsed).ThenByDescending(n => n.Node.CreatedAt)
-            .Select(n => new GameNode(n.Node.Id, n.Node.TechniqueId, n.Node.Label, SnakeCaseEnum.Name(n.Node.Side), n.Node.Hidden, n.LastUsed, n.Uses))
+            .Select(n => new GameNode(n.Node.Id, n.Node.TechniqueId, n.Node.Label, SnakeCaseEnum.Name(n.Node.Side), n.Node.Hidden, n.LastUsed, n.Uses, n.Node.X, n.Node.Y))
             .ToList();
     }
 
-    private async Task<Dictionary<string, string[]>> ValidateAsync(TrainingSessionInput input, CancellationToken cancellationToken)
+    private async Task<Dictionary<string, string[]>> ValidateAsync(Guid userId, TrainingSessionInput input, CancellationToken cancellationToken)
     {
         var categories = await db.Techniques.AsNoTracking().ToDictionaryAsync(t => t.Id, t => t.Category, cancellationToken);
-        return TrainingValidation.Validate(input, categories, DateOnly.FromDateTime(DateTime.UtcNow));
+        var errors = TrainingValidation.Validate(input, categories, DateOnly.FromDateTime(DateTime.UtcNow));
+
+        // A transition given by id must be one of the user's arrows leaving that very position.
+        var rolls = input.Rolls ?? [];
+        var ids = rolls.SelectMany(r => r.Steps ?? []).Select(s => s.Transition?.EdgeId).OfType<long>().Distinct().ToList();
+        if (ids.Count == 0) return errors;
+        var edges = await db.GameEdges.AsNoTracking().Where(e => e.UserId == userId && ids.Contains(e.Id))
+            .Select(e => new { e.Id, e.Kind, e.FromNode!.TechniqueId, e.FromNode.Side }).ToDictionaryAsync(e => e.Id, cancellationToken);
+        for (var i = 0; i < rolls.Count; i++)
+        {
+            var steps = rolls[i].Steps ?? [];
+            for (var j = 0; j < steps.Count; j++)
+            {
+                if (steps[j].Transition?.EdgeId is not { } id) continue;
+                if (!edges.TryGetValue(id, out var edge) || edge.Kind == EdgeKind.Finalizacao || edge.TechniqueId != steps[j].TechniqueId
+                    || SnakeCaseEnum.Name(edge.Side) != steps[j].Side)
+                    errors[$"rolls[{i}].steps[{j}].transition.edgeId"] = ["Escolha uma transição que sai desta posição."];
+            }
+        }
+        return errors;
     }
 
     /// <summary>Copies a valid input onto the tracked session, with new rolls and tags, the partners and positions they use and the point to fix.</summary>
@@ -203,27 +226,48 @@ public class DbTrainingStore(RollRadarDbContext db) : ITrainingStore
         var rolls = input.Rolls ?? [];
         var partners = await PartnersForAsync(userId, rolls, now, cancellationToken);
         var nodes = await NodesForAsync(userId, rolls, cancellationToken);
-        session.Rolls = rolls.Select((roll, i) => new RollEntity
+        var edges = new MapEdges(db, userId, await db.GameEdges.Where(e => e.UserId == userId).ToListAsync(cancellationToken), now);
+        session.Rolls = rolls.Select((roll, i) =>
         {
-            SessionId = session.Id,
-            Order = i,
-            Partner = Clean(roll.PartnerName) is { } name ? partners[TextNormalizer.Normalize(name)] : null,
-            PartnerBelt = ParseOrNull<Belt>(roll.PartnerBelt),
-            DurationMinutes = roll.DurationMinutes,
-            Notes = Clean(roll.Notes),
-            Steps = (roll.Steps ?? []).Select((step, j) => new RollStepEntity
+            var steps = roll.Steps ?? [];
+            return new RollEntity
             {
-                Order = j,
-                Node = nodes[NodeKey(new PositionRef(step.TechniqueId, step.Side))],
-                Outcome = ParseOrNull<StepOutcome>(step.Outcome)!.Value,
-            }).ToList(),
-            Finishes = (roll.Finishes ?? []).Select((finish, j) => new RollFinishEntity
-            {
-                Order = j,
-                ByMe = finish.ByMe,
-                TechniqueId = Clean(finish.TechniqueId),
-                Node = finish.Position is { } position ? nodes[NodeKey(position)] : null,
-            }).ToList(),
+                SessionId = session.Id,
+                Order = i,
+                Partner = Clean(roll.PartnerName) is { } name ? partners[TextNormalizer.Normalize(name)] : null,
+                PartnerBelt = ParseOrNull<Belt>(roll.PartnerBelt),
+                DurationMinutes = roll.DurationMinutes,
+                Notes = Clean(roll.Notes),
+                Steps = steps.Select((step, j) =>
+                {
+                    var node = nodes[NodeKey(new PositionRef(step.TechniqueId, step.Side))];
+                    GameEdgeEntity? edge = null;
+                    if (step.Transition is { } transition)
+                    {
+                        // An arrow of the map, or the one for this kind and technique toward the target (created if new).
+                        var target = transition.To ?? (j + 1 < steps.Count ? new PositionRef(steps[j + 1].TechniqueId, steps[j + 1].Side) : null);
+                        edge = transition.EdgeId is { } id
+                            ? edges.ById(id)
+                            : edges.For(node, nodes[NodeKey(target!)], ParseOrNull<EdgeKind>(transition.Kind)!.Value, Clean(transition.TechniqueId), false);
+                    }
+                    return new RollStepEntity
+                    {
+                        Order = j,
+                        Node = node,
+                        Outcome = ParseOrNull<StepOutcome>(step.Outcome)!.Value,
+                        Edge = edge,
+                        EdgeSucceeded = edge is null ? null : step.Transition!.Succeeded,
+                    };
+                }).ToList(),
+                Finishes = (roll.Finishes ?? []).Select((finish, j) =>
+                {
+                    var node = finish.Position is { } position ? nodes[NodeKey(position)] : null;
+                    var technique = Clean(finish.TechniqueId);
+                    // A submission with its position and technique is an arrow of the map, applied or suffered.
+                    if (node is not null && technique is not null) edges.For(node, null, EdgeKind.Finalizacao, technique, !finish.ByMe);
+                    return new RollFinishEntity { Order = j, ByMe = finish.ByMe, TechniqueId = technique, Node = node };
+                }).ToList(),
+            };
         }).ToList();
 
         var focusText = Clean(input.FocusPoint);
@@ -278,6 +322,7 @@ public class DbTrainingStore(RollRadarDbContext db) : ITrainingStore
     {
         var wanted = rolls
             .SelectMany(r => (r.Steps ?? []).Select(s => new PositionRef(s.TechniqueId, s.Side))
+                .Concat((r.Steps ?? []).Where(s => s.Transition?.To is not null).Select(s => s.Transition!.To!))
                 .Concat((r.Finishes ?? []).Where(f => f.Position is not null).Select(f => f.Position!)))
             .Select(NodeKey)
             .Distinct()
@@ -338,7 +383,8 @@ public class DbTrainingStore(RollRadarDbContext db) : ITrainingStore
             s.Rolls.OrderBy(r => r.Order).Select(r => new Roll(
                 r.Order, r.PartnerId, r.Partner?.Name, SnakeCaseEnum.Name(r.PartnerBelt), r.DurationMinutes, r.Notes,
                 r.Steps.OrderBy(st => st.Order)
-                    .Select(st => new RollStep(st.NodeId, st.Node!.TechniqueId, SnakeCaseEnum.Name(st.Node.Side), SnakeCaseEnum.Name(st.Outcome)))
+                    .Select(st => new RollStep(st.NodeId, st.Node!.TechniqueId, SnakeCaseEnum.Name(st.Node.Side), SnakeCaseEnum.Name(st.Outcome),
+                        st.EdgeId, st.EdgeSucceeded))
                     .ToList(),
                 r.Finishes.OrderBy(f => f.Order)
                     .Select(f => new RollFinish(f.ByMe, f.TechniqueId, f.NodeId,
@@ -346,6 +392,32 @@ public class DbTrainingStore(RollRadarDbContext db) : ITrainingStore
                     .ToList()))
                 .ToList(),
             s.CreatedAt, s.UpdatedAt)).ToList();
+    }
+
+    /// <summary>The user's arrows during one save: finds them by id or by what they are, creating the new ones.</summary>
+    private sealed class MapEdges(RollRadarDbContext db, Guid userId, List<GameEdgeEntity> edges, DateTime now)
+    {
+        public GameEdgeEntity ById(long id) => edges.First(e => e.Id == id);
+
+        public GameEdgeEntity For(GameNodeEntity from, GameNodeEntity? to, EdgeKind kind, string? techniqueId, bool againstMe)
+        {
+            var edge = edges.FirstOrDefault(e => Is(e.FromNode, e.FromNodeId, from)
+                && (to is null ? e.ToNodeId is null && e.ToNode is null : Is(e.ToNode, e.ToNodeId, to))
+                && e.Kind == kind && e.TechniqueId == techniqueId && e.AgainstMe == againstMe);
+            if (edge is not null) return edge;
+
+            edge = new GameEdgeEntity
+            {
+                UserId = userId, FromNode = from, ToNode = to, Kind = kind, TechniqueId = techniqueId, AgainstMe = againstMe, CreatedAt = now,
+            };
+            db.GameEdges.Add(edge);
+            edges.Add(edge);
+            return edge;
+        }
+
+        /// <summary>New positions have no id yet, so they are matched by reference.</summary>
+        private static bool Is(GameNodeEntity? navigation, long? id, GameNodeEntity node) =>
+            ReferenceEquals(navigation, node) || (node.Id != 0 && id == node.Id);
     }
 
     private static (string TechniqueId, NodeSide Side) NodeKey(PositionRef position) =>

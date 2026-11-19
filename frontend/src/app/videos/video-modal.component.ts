@@ -1,5 +1,6 @@
-import { Component, DOCUMENT, ElementRef, OnDestroy, OnInit, afterRenderEffect, computed, inject, input, output, signal } from '@angular/core';
+import { Component, DOCUMENT, ElementRef, OnDestroy, OnInit, afterRenderEffect, computed, inject, input, output, signal, viewChild } from '@angular/core';
 import { MomentVoteComponent } from '../curation/moment-vote.component';
+import { MapAttachComponent } from '../game-map/map-attach.component';
 import { FightVideo, TechniqueMoment } from './fight-video.model';
 import { FormatTimePipe } from './format-time.pipe';
 import { HighlightPipe } from './highlight.pipe';
@@ -23,7 +24,7 @@ export const ADVANCE_AFTER_VOTE_MS = 900;
  */
 @Component({
   selector: 'app-video-modal',
-  imports: [FormatTimePipe, HighlightPipe, MomentVoteComponent, VideoPlayerComponent],
+  imports: [FormatTimePipe, HighlightPipe, MomentVoteComponent, VideoPlayerComponent, MapAttachComponent],
   host: {
     '(document:keydown.escape)': 'closed.emit()',
     '(document:keydown)': 'onKeydown($event)'
@@ -41,6 +42,8 @@ export class VideoModalComponent implements OnInit, OnDestroy {
   /** Moments to step through; empty uses the moments of the video. */
   queue = input<Clip[]>([]);
   meta = input('');
+  /** False for clips that are not search moments (e.g. videos pinned to the game map): no vote under the player. */
+  voting = input(true);
   clipChange = output<Clip>();
   closed = output<void>();
 
@@ -50,6 +53,10 @@ export class VideoModalComponent implements OnInit, OnDestroy {
   inSequence = this.prefs.inSequence;
   /** Bumped by "repetir" to reload the player at the start of the moment. */
   replay = signal(0);
+
+  private player = viewChild(VideoPlayerComponent);
+  /** Second being watched, for "Anexar ao meu mapa"; the clip's start until the player reports one. */
+  readonly currentSecond = () => this.player()?.currentTime() ?? this.start(this.moment());
 
   clips = computed<Clip[]>(() => {
     const queue = this.queue();

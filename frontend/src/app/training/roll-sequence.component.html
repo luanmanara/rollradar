@@ -1,0 +1,50 @@
+@if (steps().length < 2) {
+  <p class="hint">Marque pelo menos duas posições para registrar como foi de uma para a outra.</p>
+} @else {
+  <ol class="sequence">
+    @for (st of steps(); track $index; let j = $index) {
+      <li class="step">
+        <span class="step__num" aria-hidden="true">{{ j + 1 }}</span>
+        <span class="step__name">{{ chipName(st) }}</span>
+        <span class="state state--{{ st.outcome }}">{{ outcomes[st.outcome] }}</span>
+      </li>
+      @if (j < steps().length - 1) {
+        <li class="transition">
+          @if (st.transition; as t) {
+            <span class="transition__text">↓ {{ transitionText(t) }}</span>
+            <button type="button" class="opt" [class.opt--ok]="t.succeeded" [class.opt--bad]="!t.succeeded"
+              [attr.aria-pressed]="t.succeeded" (click)="toggleSucceeded(j)" title="Toque para alternar">
+              {{ t.succeeded ? 'deu certo' : 'não deu' }}
+            </button>
+            <button type="button" class="link" (click)="setTransition(j, null)" [attr.aria-label]="'Remover a transição ' + (j + 1)">remover</button>
+          } @else if (editing() === j) {
+            <div class="editor">
+              @let existing = edgesFrom(st);
+              @if (existing.length > 0) {
+                <label class="sr-only" [for]="'tr-edge-' + index() + '-' + j">Transição do mapa</label>
+                <select class="text" [id]="'tr-edge-' + index() + '-' + j" (change)="pickEdge(j, $any($event.target).value)">
+                  <option value="">Escolher do meu mapa…</option>
+                  @for (e of existing; track e.id) { <option [value]="e.id">{{ transitionText({ edgeId: e.id, kind: null, techniqueId: null, succeeded: true }) }}</option> }
+                </select>
+                <span class="or">ou nova:</span>
+              }
+              <div class="choices" role="group" aria-label="Tipo da transição">
+                @for (k of kinds; track k.value) {
+                  <button type="button" class="opt" [attr.aria-pressed]="newKind() === k.value" (click)="newKind.set($any(k.value))">{{ k.label }}</button>
+                }
+              </div>
+              <app-technique-picker [techniques]="techniquesForNew()" [inputId]="'tr-tech-' + index() + '-' + j" submitLabel="Ok"
+                placeholder="Técnica (opcional)" (picked)="addNew(j, $event)" />
+              <div class="row">
+                <button type="button" class="link" (click)="addNew(j, null)">usar sem técnica</button>
+                <button type="button" class="link" (click)="editing.set(null)">cancelar</button>
+              </div>
+            </div>
+          } @else {
+            <button type="button" class="link" (click)="startEditing(j)">+ como fui para a próxima</button>
+          }
+        </li>
+      }
+    }
+  </ol>
+}

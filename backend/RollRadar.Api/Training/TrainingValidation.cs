@@ -1,4 +1,5 @@
 using RollRadar.Api.Data;
+using RollRadar.Api.GameMap;
 
 namespace RollRadar.Api.Training;
 
@@ -77,6 +78,18 @@ public static class TrainingValidation
                 CheckPosition(new PositionRef(step.TechniqueId, step.Side), $"{prefix}.steps[{j}]");
                 if (!SnakeCaseEnum.TryParse<StepOutcome>(step.Outcome, out _))
                     Add($"{prefix}.steps[{j}].outcome", "Escolha estive, fui bem ou sofri.");
+
+                // An arrow given by id is checked against the user's map by the store.
+                if (step.Transition is { EdgeId: null } transition)
+                {
+                    var field = $"{prefix}.steps[{j}].transition";
+                    if (!SnakeCaseEnum.TryParse<EdgeKind>(transition.Kind, out var kind) || !GameMapRules.TransitionKinds.Contains(kind))
+                        Add($"{field}.kind", "Escolha raspagem, passagem, fuga, queda ou transição.");
+                    else if (GameMapRules.CheckTechnique(kind, transition.TechniqueId, categoryById) is { } problem)
+                        Add($"{field}.techniqueId", problem);
+                    if (transition.To is { } to) CheckPosition(to, $"{field}.to");
+                    else if (j == steps.Count - 1) Add($"{field}.to", "Escolha a posição para onde a transição leva.");
+                }
             }
 
             var finishes = roll.Finishes ?? [];

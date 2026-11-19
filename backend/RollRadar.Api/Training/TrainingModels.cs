@@ -32,7 +32,15 @@ public record RollInput(
     IReadOnlyList<RollFinishInput>? Finishes = null);
 
 /// <summary>A position marked in a roll; the user's game node for it is created on first use.</summary>
-public record RollStepInput(string TechniqueId, string? Side, string? Outcome = "neutro");
+/// <param name="Transition">Detailed mode: how the user tried to go from this position to the next one.</param>
+public record RollStepInput(string TechniqueId, string? Side, string? Outcome = "neutro", TransitionInput? Transition = null);
+
+/// <summary>
+/// A transition of a detailed roll: an arrow of the game map already there (<paramref name="EdgeId"/>), or one found
+/// or created from the kind and technique, going to <paramref name="To"/> (the next marked position when null).
+/// </summary>
+/// <param name="Succeeded">Whether the transition worked.</param>
+public record TransitionInput(long? EdgeId = null, string? Kind = null, string? TechniqueId = null, PositionRef? To = null, bool Succeeded = true);
 
 /// <summary>A position of the user's game: a "Posições" or "Guardas" technique and a side.</summary>
 public record PositionRef(string TechniqueId, string? Side);
@@ -68,7 +76,8 @@ public record Roll(
     IReadOnlyList<RollStep> Steps,
     IReadOnlyList<RollFinish> Finishes);
 
-public record RollStep(long NodeId, string TechniqueId, string Side, string Outcome);
+/// <param name="EdgeId">Detailed mode: the arrow tried toward the next position.</param>
+public record RollStep(long NodeId, string TechniqueId, string Side, string Outcome, long? EdgeId = null, bool? EdgeSucceeded = null);
 
 /// <param name="NodeId">Game node of the position it came from; null when not told.</param>
 public record RollFinish(bool ByMe, string? TechniqueId, long? NodeId, PositionRef? Position);
@@ -97,7 +106,7 @@ public record FocusPoint(long Id, string Text, Guid OriginSessionId, DateOnly Or
 public record FocusReviewInput(string? Review, Guid? SessionId = null);
 
 /// <summary>A position of the user's game; <paramref name="LastUsed"/> is null until marked in a roll.</summary>
-public record GameNode(long Id, string TechniqueId, string? Label, string Side, bool Hidden, DateOnly? LastUsed, int Uses);
+public record GameNode(long Id, string TechniqueId, string? Label, string Side, bool Hidden, DateOnly? LastUsed, int Uses, double? X = null, double? Y = null);
 
 public record CatalogPosition(string TechniqueId, string English, string Portuguese, string Category);
 
@@ -113,7 +122,13 @@ public record AccountExport(
     IReadOnlyList<TrainingSession> Sessions,
     IReadOnlyList<Partner> Partners,
     IReadOnlyList<GameNode> GameNodes,
-    IReadOnlyList<ExportedFocusPoint> FocusPoints);
+    IReadOnlyList<ExportedFocusPoint> FocusPoints,
+    IReadOnlyList<ExportedEdge> GameEdges,
+    IReadOnlyList<ExportedMapVideo> MapVideos);
+
+public record ExportedEdge(long Id, long FromNodeId, long? ToNodeId, string Kind, string? TechniqueId, string? Label, bool AgainstMe, DateTime CreatedAt);
+
+public record ExportedMapVideo(long Id, long? NodeId, long? EdgeId, string VideoId, int? StartSeconds, string? Note, DateTime CreatedAt);
 
 public record ExportedFocusPoint(long Id, string Text, Guid OriginSessionId, DateTime CreatedAt, string? Review, Guid? ReviewedSessionId);
 

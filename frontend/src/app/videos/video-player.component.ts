@@ -1,4 +1,4 @@
-import { Component, ElementRef, computed, inject, input, output, viewChild } from '@angular/core';
+import { Component, ElementRef, computed, inject, input, output, signal, viewChild } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 
 /** Where the embedded player is served from; its messages are only trusted from there. */
@@ -43,6 +43,8 @@ export class VideoPlayerComponent {
   replay = input(0);
   /** The clip reached endSeconds (or the video its end). */
   ended = output<void>();
+  /** Second being played, as the embed reports it while listening; null until it does. */
+  readonly currentTime = signal<number | null>(null);
 
   /** Set once the current clip reported its end, as the embed repeats its state. */
   private endReported = false;
@@ -70,6 +72,8 @@ export class VideoPlayerComponent {
   onMessage(event: MessageEvent): void {
     if (event.origin !== PLAYER_ORIGIN || event.source !== this.frame()?.nativeElement.contentWindow) return;
     const data = parse(event.data);
+    const time = data?.event === 'infoDelivery' ? (data.info as { currentTime?: unknown } | null)?.currentTime : undefined;
+    if (typeof time === 'number') this.currentTime.set(time);
     const state = data?.event === 'onStateChange' ? data.info
       : data?.event === 'infoDelivery' ? (data.info as { playerState?: number } | null)?.playerState : undefined;
     if (state === ENDED && !this.endReported) {

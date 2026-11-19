@@ -1,0 +1,116 @@
+@if (!auth.loaded()) {
+  <p class="card loading" aria-busy="true">Carregando…</p>
+} @else if (!auth.user()) {
+  <app-login-invite />
+} @else {
+  <div class="page">
+    <header class="hero card">
+      <span class="eyebrow">Mapa do jogo</span>
+      <div class="hero__row">
+        <h1>Meu jogo</h1>
+        <div class="views" role="group" aria-label="Como ver o mapa">
+          <button type="button" class="view" [attr.aria-pressed]="view() === 'lista'" (click)="view.set('lista')">Lista</button>
+          <button type="button" class="view" [attr.aria-pressed]="view() === 'grafo'" (click)="view.set('grafo')">Grafo</button>
+        </div>
+      </div>
+      <p class="muted">Posições e setas que aparecem nos seus rolas. A cor mostra onde você vai bem (verde) e onde sofre (vermelho).</p>
+      <div class="hero__actions">
+        <button type="button" class="btn" (click)="adding.set(!adding())" [attr.aria-expanded]="adding()">+ Posição</button>
+        <a class="btn btn--ghost" routerLink="/treino/novo">Registrar treino</a>
+      </div>
+      @if (adding()) {
+        <div class="add">
+          <label class="sr-only" for="map-add-position">Posição</label>
+          <select class="text" id="map-add-position" (change)="newPosition.set($any($event.target).value)">
+            <option value="">Escolha a posição</option>
+            @for (p of positions(); track p.id) { <option [value]="p.id">{{ p.portuguese || p.english }} ({{ p.category }})</option> }
+          </select>
+          <div class="choices" role="group" aria-label="Lado">
+            @for (s of sides; track s.value) {
+              <button type="button" class="seg" [attr.aria-pressed]="newSide() === s.value" (click)="newSide.set(s.value)">{{ s.label }}</button>
+            }
+          </div>
+          <button type="button" class="btn btn--primary" [disabled]="!newPosition()" (click)="addNode()">Adicionar</button>
+        </div>
+      }
+    </header>
+
+    @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+
+    @if (map(); as m) {
+      <div class="layout">
+        <div class="main">
+          @if (visibleCount() === 0) {
+            <section class="card empty">
+              <h2>Seu mapa começa nos rolas</h2>
+              <p class="muted">Ao registrar um treino, marque as posições de cada rola. Elas aparecem aqui com os seus números.</p>
+              <a class="btn btn--primary" routerLink="/treino/novo">Registrar treino</a>
+            </section>
+          } @else if (view() === 'lista') {
+            <app-map-list [nodes]="m.nodes" [edges]="m.edges" [nameOf]="nameOf()" [categoryOf]="categoryOf()" (selected)="select($event)" />
+          } @else {
+            <app-map-graph [nodes]="m.nodes" [edges]="m.edges" [nameOf]="nameOf()" (selected)="select($event)" (moved)="savePositions($event)" />
+          }
+
+          @if (hidden().length > 0) {
+            <section class="hidden-list">
+              <button type="button" class="link" (click)="showHidden.set(!showHidden())" [attr.aria-expanded]="showHidden()">
+                {{ hidden().length }} {{ hidden().length === 1 ? 'posição escondida' : 'posições escondidas' }}
+              </button>
+              @if (showHidden()) {
+                <ul>
+                  @for (n of hidden(); track n.id) {
+                    <li>{{ hiddenName(n.id) }} <button type="button" class="link" (click)="unhide(n.id)">mostrar</button></li>
+                  }
+                </ul>
+              }
+            </section>
+          }
+        </div>
+
+        <aside class="highlights" aria-label="Destaques">
+          <section class="card block">
+            <span class="eyebrow eyebrow--green">Pontos fortes</span>
+            @if (m.highlights.strong.length > 0) {
+              <ol class="hl">
+                @for (h of m.highlights.strong; track h.target + h.id) {
+                  <li><button type="button" class="hl__item" (click)="select({ target: h.target, id: h.id })">
+                    <span>{{ highlightName(h) }}</span><strong class="good">{{ percent(h.score) }}</strong>
+                  </button></li>
+                }
+              </ol>
+            } @else {
+              <p class="muted">Aparecem quando uma posição ou transição tiver pelo menos 5 registros. Marque mais rolas.</p>
+            }
+          </section>
+          <section class="card block">
+            <span class="eyebrow eyebrow--red">Pontos fracos</span>
+            @if (m.highlights.weak.length > 0) {
+              <ol class="hl">
+                @for (h of m.highlights.weak; track h.target + h.id) {
+                  <li><button type="button" class="hl__item" (click)="select({ target: h.target, id: h.id })">
+                    <span>{{ highlightName(h) }}</span><strong class="bad">{{ percent(h.score) }}</strong>
+                  </button></li>
+                }
+              </ol>
+            } @else {
+              <p class="muted">Contam "sofri" e finalizações sofridas, com pelo menos 5 registros. Marque mais rolas.</p>
+            }
+          </section>
+        </aside>
+      </div>
+    } @else if (!error()) {
+      <p class="card loading" aria-busy="true">Carregando o mapa…</p>
+    }
+  </div>
+
+  @if (selection(); as s) {
+    <app-map-panel [selection]="s" [nodes]="map()?.nodes ?? []" [catalog]="catalog()" [nameOf]="nameOf()"
+      (closed)="selection.set(null)" (changed)="load()" (selected)="select($event)" (play)="clip.set($event)" />
+  }
+
+  @if (clip(); as c) {
+    <app-video-modal [video]="c.video" [moment]="c.moment" [voting]="!c.moment.id.startsWith('map-')"
+      (clipChange)="clip.set($event)" (closed)="clip.set(null)" />
+  }
+}

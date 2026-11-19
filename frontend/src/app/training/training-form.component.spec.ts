@@ -41,6 +41,7 @@ describe('TrainingFormComponent', () => {
       recent: [],
       catalog: [{ techniqueId: 'closed-guard', english: 'Closed Guard', portuguese: 'Guarda fechada', category: 'Guardas' }]
     });
+    http.expectOne('/api/mapa').flush({ nodes: [], edges: [], highlights: { strong: [], weak: [] } });
     http.expectOne(r => r.url === '/api/treinos' && r.method === 'GET')
       .flush({ items: previous ? [previous] : [], total: previous ? 1 : 0, page: 1, pageSize: 1 });
     http.match('/api/treinos/foco').forEach(r => r.flush(null, { status: 204, statusText: 'No Content' }));
@@ -146,6 +147,7 @@ describe('TrainingFormComponent', () => {
     await fixture.whenStable();
     http.expectOne('/api/videos/techniques').flush(catalog);
     http.expectOne('/api/mapa/posicoes-recentes').flush({ recent: [], catalog: [] });
+    http.expectOne('/api/mapa').flush({ nodes: [], edges: [], highlights: { strong: [], weak: [] } });
     http.match('/api/treinos/foco').forEach(r => r.flush(null, { status: 204, statusText: 'No Content' }));
     http.expectNone(r => r.url === '/api/treinos' && r.method === 'GET');
     fixture.detectChanges();

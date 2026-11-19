@@ -1,7 +1,9 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { TechniqueSummary } from '../videos/fight-video.model';
 import { normalize } from '../videos/technique-match';
+import { MapEdge, MapNode } from '../game-map/game-map.model';
 import { TechniquePickerComponent } from '../videos/technique-picker.component';
+import { RollSequenceComponent } from './roll-sequence.component';
 import { BELTS, OUTCOMES, SIDES, finishesLabel } from './training-labels';
 import { Belt, CatalogPosition, NodeSide, Partner, PositionRef, RollFinishInput, RollInput, RollStepInput, StepOutcome } from './training.model';
 import { TrainingService } from './training.service';
@@ -30,7 +32,7 @@ export function positionKey(p: PositionRef | null): string {
 /** One roll in the session form: partner and belt, length, positions, submissions either way, notes. */
 @Component({
   selector: 'app-roll-card',
-  imports: [TechniquePickerComponent],
+  imports: [TechniquePickerComponent, RollSequenceComponent],
   templateUrl: './roll-card.component.html',
   styleUrl: './roll-card.component.scss'
 })
@@ -42,6 +44,11 @@ export class RollCardComponent {
   chips = input<PositionChip[]>([]);
   catalog = input<CatalogPosition[]>([]);
   finishTechniques = input<TechniqueSummary[]>([]);
+  /** The user's game map, for the transitions of the detailed mode. */
+  mapNodes = input<MapNode[]>([]);
+  mapEdges = input<MapEdge[]>([]);
+  /** The whole catalog, for the technique of a new transition. */
+  techniques = input<TechniqueSummary[]>([]);
 
   rollChange = output<RollInput>();
   removed = output<void>();
@@ -54,6 +61,9 @@ export class RollCardComponent {
   readonly key = positionKey;
 
   partners = signal<Partner[]>([]);
+  /** "Rápido | detalhado" as chosen; until then, detailed when the roll already has transitions. */
+  detailedChoice = signal<boolean | null>(null);
+  detailed = computed(() => this.detailedChoice() ?? this.roll().steps.some(s => !!s.transition));
   adding = signal(false);
   newPosition = signal('');
   newSide = signal<NodeSide>('por_baixo');

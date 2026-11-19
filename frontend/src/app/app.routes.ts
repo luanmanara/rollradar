@@ -17,5 +17,7 @@ export const routes: Routes = [
   { path: 'treinos/:id', component: TrainingDetailComponent },
   { path: 'treinos/:id/editar', component: TrainingFormComponent },
   { path: 'conta', component: AccountPageComponent },
+  // Game map: loaded on demand (the graph library only comes with it).
+  { path: 'mapa', loadComponent: () => import('./game-map/game-map-page.component').then(m => m.GameMapPageComponent) },
   { path: '**', redirectTo: '' }
 ];

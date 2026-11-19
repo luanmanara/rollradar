@@ -69,6 +69,17 @@
     }
   </div>
 
+  <div class="row">
+    <div class="mode" role="group" [attr.aria-label]="'Modo do rola ' + (index() + 1)">
+      <button type="button" class="seg" [attr.aria-pressed]="!detailed()" (click)="detailedChoice.set(false)">Rápido</button>
+      <button type="button" class="seg" [attr.aria-pressed]="detailed()" (click)="detailedChoice.set(true)">Detalhado</button>
+    </div>
+    @if (detailed()) {
+      <app-roll-sequence [steps]="roll().steps" [chips]="chips()" [mapNodes]="mapNodes()" [mapEdges]="mapEdges()"
+        [techniques]="techniques()" [index]="index()" (stepsChange)="change({ steps: $event })" />
+    }
+  </div>
+
   <div class="row" role="group" [attr.aria-label]="'Finalizações do rola ' + (index() + 1)">
     <span class="label">Finalizações <small class="summary">· {{ summary() }}</small></span>
     @for (f of roll().finishes; track $index; let j = $index) {
