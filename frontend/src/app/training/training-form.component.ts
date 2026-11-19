@@ -14,6 +14,8 @@ import { ATTIRES, FINISH_CATEGORIES, FORMATS, today } from './training-labels';
 import { TrainingSyncService } from './training-sync.service';
 import { FieldErrors, RecentPositions, RollInput, TrainingSession, TrainingSessionInput } from './training.model';
 import { TrainingService } from './training.service';
+import { GameMapView } from '../game-map/game-map.model';
+import { GameMapService } from '../game-map/game-map.service';
 
 /** Attire, format and length of a new session when there is no earlier one to copy them from. */
 const DEFAULTS = { attire: 'gi', format: 'aula', durationMinutes: 90 } as const;
@@ -47,7 +49,10 @@ export function toInput(s: TrainingSession): TrainingSessionInput {
     focusPoint: s.focusPoint,
     rolls: s.rolls.map(r => ({
       partnerName: r.partnerName, partnerBelt: r.partnerBelt, durationMinutes: r.durationMinutes, notes: r.notes,
-      steps: r.steps.map(st => ({ techniqueId: st.techniqueId, side: st.side, outcome: st.outcome })),
+      steps: r.steps.map(st => ({
+        techniqueId: st.techniqueId, side: st.side, outcome: st.outcome,
+        transition: st.edgeId ? { edgeId: st.edgeId, kind: null, techniqueId: null, succeeded: st.edgeSucceeded ?? true } : null
+      })),
       finishes: r.finishes.map(f => ({ byMe: f.byMe, techniqueId: f.techniqueId, position: f.position }))
     }))
   };
@@ -95,6 +100,9 @@ export class TrainingFormComponent {
   finishTechniques = computed(() => this.tagTechniques().filter(t => FINISH_CATEGORIES.includes(t.category)));
 
   positions = signal<RecentPositions>({ recent: [], catalog: [] });
+  /** The user's game map, for the detailed mode of the rolls (its arrows). */
+  gameMap = signal<GameMapView | null>(null);
+  private gameMapService = inject(GameMapService);
   /** Positions added with "+ posição" in this visit, offered in every roll. */
   private addedChips = signal<PositionChip[]>([]);
 
@@ -133,6 +141,7 @@ export class TrainingFormComponent {
 
   private start(): void {
     this.training.recentPositions().subscribe({ next: p => this.positions.set(p), error: () => {} });
+    this.gameMapService.map().subscribe({ next: m => this.gameMap.set(m), error: () => {} });
     const id = this.editId();
     if (id) {
       this.training.get(id).subscribe({

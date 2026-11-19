@@ -158,7 +158,7 @@ public class RollFinishEntity
 
 /// <summary>
 /// A position of the user's game (a "Posições" or "Guardas" technique on one side), created the first time it is
-/// marked in a roll. The connections between positions come with the game map (RR-014).
+/// marked in a roll or added on the game map. The connections between positions are <see cref="GameEdgeEntity"/>.
 /// </summary>
 public class GameNodeEntity
 {
@@ -171,12 +171,59 @@ public class GameNodeEntity
 
     public NodeSide Side { get; set; }
 
-    /// <summary>Left out of the suggestions without losing the history.</summary>
+    /// <summary>Left out of the suggestions and the map without losing the history.</summary>
     public bool Hidden { get; set; }
+
+    /// <summary>Where the user dragged it on the map; null until then (the map lays it out by itself).</summary>
+    public double? X { get; set; }
+
+    public double? Y { get; set; }
 
     public DateTime CreatedAt { get; set; }
 
     public UserEntity? User { get; set; }
+    public TechniqueEntity? Technique { get; set; }
+}
+
+/// <summary>What an arrow of the game map is: how the user goes from one position to another, or a submission.</summary>
+public enum EdgeKind
+{
+    Raspagem,
+    Passagem,
+    Fuga,
+    Queda,
+    Transicao,
+    Finalizacao,
+}
+
+/// <summary>
+/// An arrow of the user's game map. Transitions go from a position to another; a submission (<see cref="EdgeKind.Finalizacao"/>)
+/// has no target, and <see cref="AgainstMe"/> tells whether the user applies it or suffers it from that position.
+/// </summary>
+public class GameEdgeEntity
+{
+    public long Id { get; set; }
+    public Guid UserId { get; set; }
+    public long FromNodeId { get; set; }
+
+    /// <summary>Null for submissions.</summary>
+    public long? ToNodeId { get; set; }
+
+    public EdgeKind Kind { get; set; }
+
+    /// <summary>The catalog technique of the arrow, optional; its category must suit the kind.</summary>
+    public string? TechniqueId { get; set; }
+
+    public string? Label { get; set; }
+
+    /// <summary>Submissions only: true when it is the partner who finishes the user from this position.</summary>
+    public bool AgainstMe { get; set; }
+
+    public DateTime CreatedAt { get; set; }
+
+    public UserEntity? User { get; set; }
+    public GameNodeEntity? FromNode { get; set; }
+    public GameNodeEntity? ToNode { get; set; }
     public TechniqueEntity? Technique { get; set; }
 }
 
@@ -189,8 +236,39 @@ public class RollStepEntity
     public long NodeId { get; set; }
     public StepOutcome Outcome { get; set; }
 
+    /// <summary>Detailed mode: the transition tried from this position toward the next one.</summary>
+    public long? EdgeId { get; set; }
+
+    /// <summary>Whether that transition worked; null without one.</summary>
+    public bool? EdgeSucceeded { get; set; }
+
     public RollEntity? Roll { get; set; }
     public GameNodeEntity? Node { get; set; }
+    public GameEdgeEntity? Edge { get; set; }
+}
+
+/// <summary>A fight moment the user pinned to a position or an arrow of the map, to study it there.</summary>
+public class MapVideoEntity
+{
+    public long Id { get; set; }
+    public Guid UserId { get; set; }
+
+    /// <summary>Exactly one of <see cref="NodeId"/> and <see cref="EdgeId"/> is set (check constraint).</summary>
+    public long? NodeId { get; set; }
+
+    public long? EdgeId { get; set; }
+    public required string VideoId { get; set; }
+
+    /// <summary>Second of the video to start at; null plays from the beginning.</summary>
+    public int? StartSeconds { get; set; }
+
+    public string? Note { get; set; }
+    public DateTime CreatedAt { get; set; }
+
+    public UserEntity? User { get; set; }
+    public GameNodeEntity? Node { get; set; }
+    public GameEdgeEntity? Edge { get; set; }
+    public VideoEntity? Video { get; set; }
 }
 
 /// <summary>"Point to fix" written at the end of a session and answered in a later one.</summary>

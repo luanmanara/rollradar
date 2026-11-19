@@ -71,7 +71,8 @@
         <div class="rolls">
           @for (roll of s.rolls; track $index; let i = $index) {
             <app-roll-card [roll]="roll" [index]="i" [chips]="chips()" [catalog]="positions().catalog"
-              [finishTechniques]="finishTechniques()" (rollChange)="updateRoll(i, $event)" (removed)="removeRoll(i)"
+              [finishTechniques]="finishTechniques()" [mapNodes]="gameMap()?.nodes ?? []" [mapEdges]="gameMap()?.edges ?? []"
+              [techniques]="tagTechniques()" (rollChange)="updateRoll(i, $event)" (removed)="removeRoll(i)"
               (positionAdded)="addChip($event)" />
           }
         </div>

@@ -4,7 +4,7 @@ import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { AuthService } from './auth.service';
 
-/** Header corner: "Entrar com Google" for visitors; "Diário", the user's name (Minha conta) and "Sair" once signed in. */
+/** Header corner: "Entrar com Google" for visitors; "Diário", "Mapa", the user's name (Minha conta) and "Sair" once signed in. */
 @Component({
   selector: 'app-user-menu',
   imports: [RouterLink],
@@ -13,6 +13,7 @@ import { AuthService } from './auth.service';
       @if (auth.user(); as user) {
         <div class="user">
           <a class="user__btn user__btn--diary" routerLink="/treinos">Diário</a>
+          <a class="user__btn user__btn--diary" routerLink="/mapa">Mapa</a>
           <a class="user__name" routerLink="/conta" [title]="'Minha conta · ' + (user.email ?? '')">{{ user.nome || user.email || 'Minha conta' }}</a>
           <button type="button" class="user__btn" [disabled]="busy()" (click)="logout()">Sair</button>
         </div>

@@ -1,0 +1,80 @@
+:host { display: block; }
+
+.hint { color: var(--muted); font-size: 0.82rem; }
+
+.sequence { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-weight: 600;
+}
+
+.step__num {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--blue-50);
+  color: var(--blue);
+  font-size: 0.75rem;
+}
+
+.step__name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+
+.state {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--page);
+  color: var(--muted);
+  font-size: 0.72rem;
+
+  &--bem { background: var(--green-100); color: var(--green-ink); }
+  &--mal { background: var(--red-100); color: var(--red-ink); }
+}
+
+.transition {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-left: 11px;
+  padding: 2px 0 2px 18px;
+  border-left: 2px dashed var(--line);
+  font-size: 0.85rem;
+}
+
+.transition__text { font-weight: 600; }
+
+.editor { display: grid; flex: 1; gap: 8px; min-width: 0; padding: 8px 0; }
+
+.or { color: var(--muted); font-size: 0.8rem; }
+
+.choices { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.opt {
+  min-height: 32px;
+  padding: 2px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.82rem;
+  font-weight: 600;
+
+  &[aria-pressed="true"] { border-color: var(--blue); background: var(--blue-50); color: var(--blue); }
+  &--ok[aria-pressed="true"] { border-color: var(--green-ink); background: var(--green-100); color: var(--green-ink); }
+  &--bad { border-color: var(--red); background: var(--red-50); color: var(--red-ink); }
+}
+
+.text { width: 100%; min-height: 40px; padding: 8px 10px; border: 1.5px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); font: inherit; }
+
+.row { display: flex; gap: 12px; }
+
+.link { padding: 0; border: 0; background: none; color: var(--blue); font-size: 0.84rem; font-weight: 600; text-decoration: underline; }

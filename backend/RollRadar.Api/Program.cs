@@ -11,6 +11,7 @@ using RollRadar.Api.Auth;
 using RollRadar.Api.Controllers;
 using RollRadar.Api.Curation;
 using RollRadar.Api.Data;
+using RollRadar.Api.GameMap;
 using RollRadar.Api.Services;
 using RollRadar.Api.Techniques;
 using RollRadar.Api.Training;
@@ -71,6 +72,7 @@ builder.Services.Configure<ApiAccessOptions>(builder.Configuration.GetSection(Ap
 // Site accounts (Google + rr_session cookie) only count where the "User" policy asks for them.
 builder.Services.AddScoped<IAccountStore, DbAccountStore>();
 builder.Services.AddScoped<ITrainingStore, DbTrainingStore>();
+builder.Services.AddScoped<IGameMapStore, DbGameMapStore>();
 builder.Services.AddAuthentication(ApiTokenAuthenticationHandler.Scheme)
     .AddScheme<AuthenticationSchemeOptions, ApiTokenAuthenticationHandler>(ApiTokenAuthenticationHandler.Scheme, null)
     .AddUserAccounts(builder.Configuration);

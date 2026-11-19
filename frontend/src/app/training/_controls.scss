@@ -36,9 +36,8 @@
   }
 }
 
-@mixin controls {
-  @include fields;
-
+// Rows of choice buttons (one or several pressed).
+@mixin choices {
   .choices {
     display: flex;
     flex-wrap: wrap;
@@ -66,6 +65,11 @@
     &--primary:hover { background: var(--blue-hover); }
     &:disabled { opacity: 0.55; cursor: default; }
   }
+}
+
+@mixin controls {
+  @include fields;
+  @include choices;
 
   .chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 

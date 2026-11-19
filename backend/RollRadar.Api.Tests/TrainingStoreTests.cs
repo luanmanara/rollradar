@@ -308,7 +308,9 @@ internal static class TrainingData
             new TechniqueEntity { Id = "closed-guard", English = "Closed Guard", Portuguese = "Guarda fechada", Category = "Guardas", Position = 2 },
             new TechniqueEntity { Id = "armbar", English = "Armbar", Portuguese = "Chave de braço", Category = "Chaves de braço", Position = 3 },
             new TechniqueEntity { Id = "rear-naked-choke", English = "Rear Naked Choke", Portuguese = "Mata-leão", Category = "Estrangulamentos", Position = 4 },
-            new TechniqueEntity { Id = "single-leg", English = "Single Leg", Portuguese = "Single leg", Category = "Quedas", Position = 5 });
+            new TechniqueEntity { Id = "single-leg", English = "Single Leg", Portuguese = "Single leg", Category = "Quedas", Position = 5 },
+            new TechniqueEntity { Id = "scissor-sweep", English = "Scissor Sweep", Portuguese = "Raspagem de tesoura", Category = "Raspagens", Position = 6 },
+            new TechniqueEntity { Id = "knee-cut", English = "Knee Cut", Portuguese = "Passagem de joelho", Category = "Passagens", Position = 7 });
         await db.SaveChangesAsync();
     }
 

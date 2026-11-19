@@ -39,7 +39,8 @@
         </div>
       </div>
 
-      <app-moment-vote [momentId]="moment().id" (voted)="onVoted()" />
+      @if (voting()) { <app-moment-vote [momentId]="moment().id" (voted)="onVoted()" /> }
+      <app-map-attach [videoId]="video().id" [currentSecond]="currentSecond" />
     </div>
 
     <aside class="side">

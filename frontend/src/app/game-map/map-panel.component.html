@@ -1,0 +1,135 @@
+<div class="backdrop" (click)="closed.emit()"></div>
+<aside class="panel" role="dialog" aria-modal="true" aria-labelledby="map-panel-title">
+  <header class="panel__head">
+    <div class="panel__titles">
+      <span class="eyebrow" [class.eyebrow--red]="edge()?.edge?.againstMe">{{ eyebrow() }}</span>
+      <h2 id="map-panel-title">{{ title() }}</h2>
+      @if (route()) { <p class="muted">{{ route() }}</p> }
+    </div>
+    <button type="button" class="icon-btn" (click)="closed.emit()" aria-label="Fechar painel" title="Fechar">✕</button>
+  </header>
+
+  @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+
+  @if (node(); as d) {
+    <dl class="tiles">
+      <div class="stat"><dt>Vezes</dt><dd>{{ d.node.stats.steps }}</dd></div>
+      <div class="stat stat--win"><dt>Fui bem</dt><dd>{{ d.node.stats.good }}</dd></div>
+      <div class="stat stat--loss"><dt>Sofri</dt><dd>{{ d.node.stats.bad }}</dd></div>
+      <div class="stat"><dt>Sucesso</dt><dd>{{ percent(d.node.stats.successRate) }}</dd></div>
+      <div class="stat stat--win"><dt>Finalizei daqui</dt><dd>{{ d.node.stats.finishesFor }}</dd></div>
+      <div class="stat stat--loss"><dt>Finalizado daqui</dt><dd>{{ d.node.stats.finishesAgainst }}</dd></div>
+    </dl>
+
+    <section class="block">
+      <h3>Saídas</h3>
+      @if (d.outgoing.length > 0) {
+        <div class="links">
+          @for (e of d.outgoing; track e.id) {
+            <button type="button" class="link-pill" [class.link-pill--bad]="e.againstMe" (click)="selected.emit({ target: 'edge', id: e.id })">
+              {{ arrowText(e) }} @if (e.stats.uses > 0) { <small>{{ e.stats.uses }}×</small> }
+            </button>
+          }
+        </div>
+      } @else {
+        <p class="muted">Nenhuma seta ainda. Crie uma abaixo ou use o modo detalhado ao registrar um rola.</p>
+      }
+    </section>
+  }
+
+  @if (edge(); as d) {
+    <dl class="tiles">
+      <div class="stat"><dt>{{ d.edge.kind === 'finalizacao' ? 'Vezes' : 'Tentativas' }}</dt><dd>{{ d.edge.stats.uses }}</dd></div>
+      @if (d.edge.kind !== 'finalizacao') {
+        <div class="stat stat--win"><dt>Deu certo</dt><dd>{{ d.edge.stats.succeeded }}</dd></div>
+        <div class="stat"><dt>Sucesso</dt><dd>{{ percent(d.edge.stats.successRate) }}</dd></div>
+      }
+    </dl>
+  }
+
+  @let notes = node()?.notes ?? edge()?.notes ?? [];
+  @let videos = node()?.videos ?? edge()?.videos ?? [];
+  @let suggested = node()?.suggested ?? edge()?.suggested ?? [];
+
+  @if (node() || edge()) {
+    <section class="block">
+      <h3>Últimas anotações</h3>
+      @if (notes.length > 0) {
+        <ul class="notes">
+          @for (n of notes; track $index) {
+            <li>
+              <a [routerLink]="['/treinos', n.sessionId]" class="notes__when">{{ day(n.date) }}@if (n.partnerName) { · {{ n.partnerName }} }</a>
+              <p>{{ n.notes }}</p>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="muted">Sem anotações de rolas aqui ainda.</p>
+      }
+    </section>
+
+    <section class="block">
+      <h3>Meus vídeos</h3>
+      @if (videos.length > 0) {
+        <ul class="videos">
+          @for (v of videos; track v.id) {
+            <li class="video">
+              <button type="button" class="video__play" (click)="playPinned(v)">
+                <span class="video__title">{{ v.title }}</span>
+                <small>{{ v.startSeconds ?? 0 | formatTime }}@if (v.note) { · {{ v.note }} }</small>
+              </button>
+              <button type="button" class="icon-btn icon-btn--sm" (click)="removeVideo(v)" [attr.aria-label]="'Remover ' + v.title" title="Remover">✕</button>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="muted">Abra uma luta e use "Anexar ao meu mapa" para guardar o momento aqui.</p>
+      }
+    </section>
+
+    @if (suggested.length > 0) {
+      <section class="block">
+        <h3>Lutas com esta técnica</h3>
+        <ul class="videos">
+          @for (v of suggested; track v.id) {
+            <li class="video">
+              <button type="button" class="video__play" (click)="playSuggested(v)">
+                <span class="video__title">{{ v.title }}</span>
+                <small>{{ v.moments.length }} {{ v.moments.length === 1 ? 'momento' : 'momentos' }}</small>
+              </button>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    <section class="block actions">
+      @if (renaming()) {
+        <div class="inline">
+          <label class="sr-only" for="map-rename">Novo nome</label>
+          <input #name class="text" id="map-rename" type="text" maxlength="80" [value]="node()?.node?.label ?? edge()?.edge?.label ?? ''"
+            placeholder="Vazio volta ao nome da técnica" (keydown.enter)="rename(name.value)">
+          <button type="button" class="btn btn--primary" [disabled]="busy()" (click)="rename(name.value)">Salvar</button>
+          <button type="button" class="btn" (click)="renaming.set(false)">Cancelar</button>
+        </div>
+      } @else {
+        <div class="inline">
+          <button type="button" class="btn" (click)="renaming.set(true)">Renomear</button>
+          @if (node(); as d) {
+            <button type="button" class="btn" [disabled]="busy()" (click)="toggleHidden()">{{ d.node.hidden ? 'Mostrar no mapa' : 'Esconder' }}</button>
+            <button type="button" class="btn btn--primary" (click)="creating.set(!creating())" [attr.aria-expanded]="creating()">+ Seta</button>
+          }
+          @if (edge()) { <button type="button" class="btn btn--danger" [disabled]="busy()" (click)="removeEdge()">Apagar seta</button> }
+        </div>
+      }
+
+      @if (creating()) {
+        @if (node(); as d) {
+          <app-map-edge-form [from]="d.node" [targets]="targets()" [catalog]="catalog()" [nameOf]="nameOf()" (created)="onCreated()" />
+        }
+      }
+    </section>
+  } @else if (!error()) {
+    <p class="muted" aria-busy="true">Carregando…</p>
+  }
+</aside>

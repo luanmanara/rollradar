@@ -15,6 +15,8 @@ PR `RR-013 · Diário de treino`. Mudança grande vira cards filhos com "Parte d
 
 | Código | Data | Tipo | Mudança | Status |
 | --- | --- | --- | --- | --- |
+| RR-018 | 18/11/2026 | Requisição | Coletar lutas avulsas pelo link | Em andamento |
+| RR-017 | 24/10/2026 | Requisição | Pontuação de competição no diário | Aberta |
 | RR-016 | 23/10/2026 | Requisição | Contas de usuário (fase 0) | Aberta |
 | RR-015 | 23/10/2026 | Tarefa | Controle de mudanças | Em andamento |
 | RR-014 | 23/10/2026 | Requisição | Mapa do jogo | Aberta |
@@ -33,6 +35,20 @@ PR `RR-013 · Diário de treino`. Mudança grande vira cards filhos com "Parte d
 | RR-001 | 16/10/2026 | Tarefa | Renomear o projeto para RollRadar | Concluída |
 
 ## Cards
+
+## RR-018 · Coletar lutas avulsas pelo link
+- Tipo: Requisição
+- Status: Em andamento (18/11/2026)
+- Objetivo: opção `--videos` no `coletar` do Coletor para baixar as legendas de lutas escolhidas (links ou IDs) sem esperar a fila. Lutas que ainda não estão no banco entram na fila na hora (1 consulta ao YouTube cada); as que já têm legenda são puladas. Mesmo ritmo e mesma espera em bloqueio da coleta normal.
+- Primeiro uso: lutas recentes do FloGrappling, postadas depois da última listagem e com poucas views, que ficariam atrás das 137 pendentes do canal.
+- Branch: nenhuma. O Coletor fica fora do git (`.gitignore`); só este card entra no repositório, junto com o RR-014.
+
+## RR-017 · Pontuação de competição no diário
+- Tipo: Requisição
+- Status: Aberta (24/10/2026)
+- Objetivo: no registro de cada rola, botões "pontos que fiz" e "pontos que sofri" com a pontuação da IBJJF (vantagem; 2 queda, raspagem e joelho na barriga; 3 passagem; 4 montada e pegada nas costas). Depois, a técnica que gerou cada ponto.
+- Depende de: RR-013 (Diário de treino), vem depois dele
+- Branch: feature/RR-017-pontuacao-de-competicao
 
 ## RR-016 · Contas de usuário (fase 0)
 - Tipo: Requisição

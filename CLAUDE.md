@@ -89,11 +89,19 @@ The original pipeline, connected by files on disk:
      `training_sessions` (client-generated uuid, so POST is idempotent), `session_techniques`, `partners` (unique per
      user by normalized name), `rolls` (timed, optional length), `roll_finishes` (any number per roll, `by_me`, optional
      technique and position; none = nobody submitted), `roll_steps` (estive/fui bem/sofri), `game_nodes` (a Posições/Guardas technique + side, created on first
-     use; edges come with RR-014) and `focus_points`; every query filters by the cookie's user id and everything
+     use; arrows are `game_edges`, RR-014) and `focus_points`; every query filters by the cookie's user id and everything
      cascades from `users` (`DELETE /api/conta`; `GET /api/conta/exportar` dumps it all). Choices travel as the stored
      snake_case names (`SnakeCaseEnum`); `TrainingValidation` checks scales 1–5, finish/position categories.
      Frontend `src/app/training/`: one-screen form with a localStorage draft and an outbox that retries
      (`training-sync.service.ts`), history by week, detail; `/conta` in `src/app/account/`. "Rola" is masculine in UI text.
+   - Game map (RR-014, `GameMap/`, `Data/DbGameMapStore`, `GameMapController`, `/api/mapa`, policy `"User"`): `game_nodes`
+     get x/y; `game_edges` (raspagem/passagem/fuga/queda/transicao/finalizacao, technique checked against the kind's
+     category by `GameMapRules`, submissions have no target and `against_me`); `map_videos` pin a fight second to exactly
+     one node or edge (check constraint); `roll_steps.edge_id/edge_succeeded` hold the detailed roll's transitions.
+     Saving a session creates the submission arrows (finish with position + technique). Numbers are counted per request
+     from steps and finishes (`GameMapStats`, no AI): highlights need 5 occurrences. Frontend `src/app/game-map/`
+     (lazy route `/mapa`): list (phone default) or Cytoscape graph (lazy chunk, side columns, drag saves x/y), panel,
+     "Anexar ao meu mapa" in the video modal; detailed mode of a roll is `training/roll-sequence.component.ts`.
    - Frontend (`src/app/videos/`): standalone components, signals, zoneless, OnPush by default.
      `technique-picker` (autocomplete matching PT/EN/aliases client-side, `technique-match.ts`),
      `technique-browser` (category tabs), `video-search` (results, athlete filter client-side, search kept in
@@ -112,6 +120,10 @@ Tarefa (`chore/`, technical work). Status: Aberta → Em andamento → Concluíd
 Before starting new work, propose the card (next free number) and the branch name; the user creates branches himself.
 Branch `feature/RR-013-diario-de-treino`, commit `RR-013: adiciona tabela de treinos`, PR `RR-013 · Diário de treino`.
 Big changes get child cards ("Parte de: RR-0xx"). Ideas stay in the ideas list until the user decides to do them.
+
+- Code graph: before reading files for a task, query graphify-out/ (GRAPH_REPORT.md and the graph) to find the
+  relevant code; read files only where the graph is not enough. At the end of every task that changes code,
+  regenerate the graph (`graphify update .`) so it matches the branch. graphify-out/ stays out of git.
 
 ## Decisions already made (don't reopen them)
 

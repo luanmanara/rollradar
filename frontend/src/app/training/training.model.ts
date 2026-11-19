@@ -13,6 +13,19 @@ export interface RollStepInput {
   techniqueId: string;
   side: NodeSide;
   outcome: StepOutcome;
+  /** Detailed mode: how the user tried to go from this position to the next one. */
+  transition?: TransitionInput | null;
+}
+
+/**
+ * A transition of a detailed roll toward the next marked position: an arrow of the game map (edgeId), or a kind and
+ * an optional catalog technique, which the API turns into an arrow (found or created).
+ */
+export interface TransitionInput {
+  edgeId: number | null;
+  kind: 'raspagem' | 'passagem' | 'fuga' | 'queda' | 'transicao' | null;
+  techniqueId: string | null;
+  succeeded: boolean;
 }
 
 /** A position of the user's game: a technique of the Posições/Guardas categories and a side. */
@@ -60,6 +73,9 @@ export interface RollStep {
   techniqueId: string;
   side: NodeSide;
   outcome: StepOutcome;
+  /** Detailed mode: the arrow tried toward the next position, and whether it worked. */
+  edgeId?: number | null;
+  edgeSucceeded?: boolean | null;
 }
 
 export interface RollFinish extends RollFinishInput {

@@ -32,6 +32,8 @@ public class RollRadarDbContext(DbContextOptions<RollRadarDbContext> options) : 
     public DbSet<GameNodeEntity> GameNodes => Set<GameNodeEntity>();
     public DbSet<RollStepEntity> RollSteps => Set<RollStepEntity>();
     public DbSet<RollFinishEntity> RollFinishes => Set<RollFinishEntity>();
+    public DbSet<GameEdgeEntity> GameEdges => Set<GameEdgeEntity>();
+    public DbSet<MapVideoEntity> MapVideos => Set<MapVideoEntity>();
     public DbSet<FocusPointEntity> FocusPoints => Set<FocusPointEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -188,7 +190,34 @@ public class RollRadarDbContext(DbContextOptions<RollRadarDbContext> options) : 
             e.Property(s => s.Outcome).HasConversion(new SnakeCaseEnumConverter<StepOutcome>());
             e.HasOne(s => s.Roll).WithMany(r => r.Steps).HasForeignKey(s => s.RollId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(s => s.Node).WithMany().HasForeignKey(s => s.NodeId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(s => s.Edge).WithMany().HasForeignKey(s => s.EdgeId).OnDelete(DeleteBehavior.SetNull);
             e.HasIndex(s => new { s.RollId, s.Order });
+        });
+
+        // Game map (RR-014): arrows between the user's positions, and fight moments pinned to them.
+        modelBuilder.Entity<GameEdgeEntity>(e =>
+        {
+            e.ToTable("game_edges");
+            e.Property(g => g.Kind).HasConversion(new SnakeCaseEnumConverter<EdgeKind>());
+            e.Property(g => g.CreatedAt).HasDefaultValueSql("now()");
+            e.HasOne(g => g.User).WithMany().HasForeignKey(g => g.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(g => g.FromNode).WithMany().HasForeignKey(g => g.FromNodeId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(g => g.ToNode).WithMany().HasForeignKey(g => g.ToNodeId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(g => g.Technique).WithMany().HasForeignKey(g => g.TechniqueId).OnDelete(DeleteBehavior.Restrict);
+            // NULLS NOT DISTINCT: a submission (no target) or an arrow without technique is still one arrow.
+            e.HasIndex(g => new { g.UserId, g.FromNodeId, g.ToNodeId, g.Kind, g.TechniqueId, g.AgainstMe })
+                .IsUnique().AreNullsDistinct(false);
+        });
+
+        modelBuilder.Entity<MapVideoEntity>(e =>
+        {
+            e.ToTable("map_videos", t => t.HasCheckConstraint("ck_map_videos_one_target", "num_nonnulls(node_id, edge_id) = 1"));
+            e.Property(v => v.CreatedAt).HasDefaultValueSql("now()");
+            e.HasOne(v => v.User).WithMany().HasForeignKey(v => v.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(v => v.Node).WithMany().HasForeignKey(v => v.NodeId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(v => v.Edge).WithMany().HasForeignKey(v => v.EdgeId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(v => v.Video).WithMany().HasForeignKey(v => v.VideoId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(v => v.UserId);
         });
 
         modelBuilder.Entity<RollFinishEntity>(e =>

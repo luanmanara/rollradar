@@ -225,6 +225,71 @@ namespace RollRadar.Api.Data.Migrations
                     b.ToTable("focus_points", (string)null);
                 });
 
+            modelBuilder.Entity("RollRadar.Api.Data.GameEdgeEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<bool>("AgainstMe")
+                        .HasColumnType("boolean")
+                        .HasColumnName("against_me");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<long>("FromNodeId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("from_node_id");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("Label")
+                        .HasColumnType("text")
+                        .HasColumnName("label");
+
+                    b.Property<string>("TechniqueId")
+                        .HasColumnType("text")
+                        .HasColumnName("technique_id");
+
+                    b.Property<long?>("ToNodeId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("to_node_id");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_game_edges");
+
+                    b.HasIndex("FromNodeId")
+                        .HasDatabaseName("ix_game_edges_from_node_id");
+
+                    b.HasIndex("TechniqueId")
+                        .HasDatabaseName("ix_game_edges_technique_id");
+
+                    b.HasIndex("ToNodeId")
+                        .HasDatabaseName("ix_game_edges_to_node_id");
+
+                    b.HasIndex("UserId", "FromNodeId", "ToNodeId", "Kind", "TechniqueId", "AgainstMe")
+                        .IsUnique()
+                        .HasDatabaseName("ix_game_edges_user_id_from_node_id_to_node_id_kind_technique_i");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("UserId", "FromNodeId", "ToNodeId", "Kind", "TechniqueId", "AgainstMe"), false);
+
+                    b.ToTable("game_edges", (string)null);
+                });
+
             modelBuilder.Entity("RollRadar.Api.Data.GameNodeEntity", b =>
                 {
                     b.Property<long>("Id")
@@ -262,6 +327,14 @@ namespace RollRadar.Api.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
+                    b.Property<double?>("X")
+                        .HasColumnType("double precision")
+                        .HasColumnName("x");
+
+                    b.Property<double?>("Y")
+                        .HasColumnType("double precision")
+                        .HasColumnName("y");
+
                     b.HasKey("Id")
                         .HasName("pk_game_nodes");
 
@@ -273,6 +346,67 @@ namespace RollRadar.Api.Data.Migrations
                         .HasDatabaseName("ix_game_nodes_user_id_technique_id_side");
 
                     b.ToTable("game_nodes", (string)null);
+                });
+
+            modelBuilder.Entity("RollRadar.Api.Data.MapVideoEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<long?>("EdgeId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("edge_id");
+
+                    b.Property<long?>("NodeId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("node_id");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text")
+                        .HasColumnName("note");
+
+                    b.Property<int?>("StartSeconds")
+                        .HasColumnType("integer")
+                        .HasColumnName("start_seconds");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("VideoId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("video_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_map_videos");
+
+                    b.HasIndex("EdgeId")
+                        .HasDatabaseName("ix_map_videos_edge_id");
+
+                    b.HasIndex("NodeId")
+                        .HasDatabaseName("ix_map_videos_node_id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_map_videos_user_id");
+
+                    b.HasIndex("VideoId")
+                        .HasDatabaseName("ix_map_videos_video_id");
+
+                    b.ToTable("map_videos", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_map_videos_one_target", "num_nonnulls(node_id, edge_id) = 1");
+                        });
                 });
 
             modelBuilder.Entity("RollRadar.Api.Data.MomentVoteEntity", b =>
@@ -462,6 +596,14 @@ namespace RollRadar.Api.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
+                    b.Property<long?>("EdgeId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("edge_id");
+
+                    b.Property<bool?>("EdgeSucceeded")
+                        .HasColumnType("boolean")
+                        .HasColumnName("edge_succeeded");
+
                     b.Property<long>("NodeId")
                         .HasColumnType("bigint")
                         .HasColumnName("node_id");
@@ -481,6 +623,9 @@ namespace RollRadar.Api.Data.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_roll_steps");
+
+                    b.HasIndex("EdgeId")
+                        .HasDatabaseName("ix_roll_steps_edge_id");
 
                     b.HasIndex("NodeId")
                         .HasDatabaseName("ix_roll_steps_node_id");
@@ -921,6 +1066,43 @@ namespace RollRadar.Api.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("RollRadar.Api.Data.GameEdgeEntity", b =>
+                {
+                    b.HasOne("RollRadar.Api.Data.GameNodeEntity", "FromNode")
+                        .WithMany()
+                        .HasForeignKey("FromNodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_game_edges_game_nodes_from_node_id");
+
+                    b.HasOne("RollRadar.Api.Data.TechniqueEntity", "Technique")
+                        .WithMany()
+                        .HasForeignKey("TechniqueId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_game_edges_techniques_technique_id");
+
+                    b.HasOne("RollRadar.Api.Data.GameNodeEntity", "ToNode")
+                        .WithMany()
+                        .HasForeignKey("ToNodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_game_edges_game_nodes_to_node_id");
+
+                    b.HasOne("RollRadar.Api.Data.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_game_edges_users_user_id");
+
+                    b.Navigation("FromNode");
+
+                    b.Navigation("Technique");
+
+                    b.Navigation("ToNode");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("RollRadar.Api.Data.GameNodeEntity", b =>
                 {
                     b.HasOne("RollRadar.Api.Data.TechniqueEntity", "Technique")
@@ -940,6 +1122,43 @@ namespace RollRadar.Api.Data.Migrations
                     b.Navigation("Technique");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("RollRadar.Api.Data.MapVideoEntity", b =>
+                {
+                    b.HasOne("RollRadar.Api.Data.GameEdgeEntity", "Edge")
+                        .WithMany()
+                        .HasForeignKey("EdgeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_map_videos_game_edges_edge_id");
+
+                    b.HasOne("RollRadar.Api.Data.GameNodeEntity", "Node")
+                        .WithMany()
+                        .HasForeignKey("NodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_map_videos_game_nodes_node_id");
+
+                    b.HasOne("RollRadar.Api.Data.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_map_videos_users_user_id");
+
+                    b.HasOne("RollRadar.Api.Data.VideoEntity", "Video")
+                        .WithMany()
+                        .HasForeignKey("VideoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_map_videos_videos_video_id");
+
+                    b.Navigation("Edge");
+
+                    b.Navigation("Node");
+
+                    b.Navigation("User");
+
+                    b.Navigation("Video");
                 });
 
             modelBuilder.Entity("RollRadar.Api.Data.MomentVoteEntity", b =>
@@ -1016,6 +1235,12 @@ namespace RollRadar.Api.Data.Migrations
 
             modelBuilder.Entity("RollRadar.Api.Data.RollStepEntity", b =>
                 {
+                    b.HasOne("RollRadar.Api.Data.GameEdgeEntity", "Edge")
+                        .WithMany()
+                        .HasForeignKey("EdgeId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_roll_steps_game_edges_edge_id");
+
                     b.HasOne("RollRadar.Api.Data.GameNodeEntity", "Node")
                         .WithMany()
                         .HasForeignKey("NodeId")
@@ -1029,6 +1254,8 @@ namespace RollRadar.Api.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_roll_steps_rolls_roll_id");
+
+                    b.Navigation("Edge");
 
                     b.Navigation("Node");
 
