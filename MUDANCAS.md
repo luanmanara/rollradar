@@ -15,7 +15,7 @@ PR `RR-013 · Diário de treino`. Mudança grande vira cards filhos com "Parte d
 
 | Código | Data | Tipo | Mudança | Status |
 | --- | --- | --- | --- | --- |
-| RR-018 | 18/11/2026 | Requisição | Coletar lutas avulsas pelo link | Em andamento |
+| RR-018 | 18/11/2026 | Requisição | Coletar lutas avulsas pelo link | Concluída |
 | RR-017 | 24/10/2026 | Requisição | Pontuação de competição no diário | Aberta |
 | RR-016 | 23/10/2026 | Requisição | Contas de usuário (fase 0) | Aberta |
 | RR-015 | 23/10/2026 | Tarefa | Controle de mudanças | Em andamento |
@@ -38,9 +38,9 @@ PR `RR-013 · Diário de treino`. Mudança grande vira cards filhos com "Parte d
 
 ## RR-018 · Coletar lutas avulsas pelo link
 - Tipo: Requisição
-- Status: Em andamento (18/11/2026)
+- Status: Concluída (18/11/2026)
 - Objetivo: opção `--videos` no `coletar` do Coletor para baixar as legendas de lutas escolhidas (links ou IDs) sem esperar a fila. Lutas que ainda não estão no banco entram na fila na hora (1 consulta ao YouTube cada); as que já têm legenda são puladas. Mesmo ritmo e mesma espera em bloqueio da coleta normal.
-- Primeiro uso: lutas recentes do FloGrappling, postadas depois da última listagem e com poucas views, que ficariam atrás das 137 pendentes do canal.
+- Primeiro uso (18/11/2026): 3 lutas do The Crown 2026 do FloGrappling, todas com legenda (24, 7 e 15 momentos de técnica). A compilação "Every Match From Mica Galvão" não tem "vs" no título, então a listagem normal nunca a pegaria.
 - Branch: nenhuma. O Coletor fica fora do git (`.gitignore`); só este card entra no repositório, junto com o RR-014.
 
 ## RR-017 · Pontuação de competição no diário
